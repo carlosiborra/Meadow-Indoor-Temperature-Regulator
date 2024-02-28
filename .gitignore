@@ -17,7 +17,8 @@
 mono_crash.*
 
 # Build results
-*/obj
+TemperatureWarriorCode/obj/
+*[Ss]ecrets.cs
 */[Dd]ebug/
 */[Dd]ebugPublic/
 */[Rr]elease/
