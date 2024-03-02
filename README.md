@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-# Sistemas-software-Grupo-1
-
-## Installation
-
-Copy Secrests.example file and fill the variables
-```
-cp TemperatureWarriorCode/Secrets.example.cs TemperatureWarriorCode/Secrets.cs
-```
-=======
 ﻿# Software Systems Group 1
 
 Welcome to the Software Systems Group 1's GitHub repository. This README provides detailed instructions for installing and running Meadow on Windows 11, specifically tailored for our project needs.
@@ -61,4 +51,3 @@ To deploy and run a project on your Meadow board, follow these instructions:
    Select the Meadow project within VS Code, and press `F5` to build and deploy the project to your Meadow board.
 
 > **Note**: It's crucial to open the project by double-clicking `TemperatureWarriorCode.sln`. Opening the project in any other manner may result in it not functioning correctly.
->>>>>>> 3c9badc7312529d252a734f666586cd852089949
