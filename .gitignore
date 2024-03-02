@@ -1,0 +1,9 @@
+# Exclude Visual Studio project settings and cache
+.vs/
+
+# Exclude Debug and Release build outputs
+TemperatureWarriorCode/bin/Debug/
+TemperatureWarriorCode/bin/Release/
+
+# Exclude all OBJ files (obj are intermediate files created by the compiler)
+TemperatureWarriorCode/obj/
