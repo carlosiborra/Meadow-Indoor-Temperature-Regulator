@@ -27,3 +27,11 @@ Follow these steps to install Meadow on Windows 11:
      ```bash
      meadow device info
      ```
+
+## Steps to Run a Meadow Project
+
+Follow these steps to run a Meadow project:
+    1. Select the Meadow project in VS Code
+    2. Press F5 to build and deploy the project to the Meadow board
+
+Note: beware, you should douvle click TemperatureWarriorCode.sln to open the project in VS Code, otherwise it will not work.
