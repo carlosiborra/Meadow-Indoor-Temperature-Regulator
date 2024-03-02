@@ -5,9 +5,8 @@ name: .NET
 
 on:
   workflow_call:
-  push:
-    branches: [ "develop" ]
   pull_request:
+  push:
     branches: [ "develop" ]
 
 jobs:
