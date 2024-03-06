@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
 
-namespace TemperatureWarriorCode.Web {
-    public class WebServer {
+namespace TemperatureWarriorCode.Web
+{
+    public class WebServer
+    {
 
         private IPAddress _ip = null;
         private int _port = -1;
         private bool _runServer = true;
-        private static HttpListener listener;
-        private static int pageViews = 0;
-        private static int requestCount = 0;
+        private static HttpListener _listener;
+        private static int _pageViews = 0;
+        private static int _requestCount = 0;
         private static bool ready = false;
         private static readonly string pass = "pass";
         private static string message = "";
@@ -31,64 +33,70 @@ namespace TemperatureWarriorCode.Web {
         /// </summary>
         public event CommandReceivedHandler CommandReceived;
 
-        public string Url {
-            get {
-                if (_ip != null && _port != -1) {
-                    return $"http://{_ip}:{_port}/";
-                }
-                else {
-                    return $"http://127.0.0.1:{_port}/";
-                }
+        public string Url
+        {
+            get
+            {
+                string ip = _ip?.ToString() ?? "127.0.0.1";  // Convert _ip to string if it's not null; otherwise, use "127.0.0.1".
+                return $"http://{ip}:{_port}/";
             }
         }
 
-        public WebServer(IPAddress ip, int port) {
-            _ip = ip;
-            _port = port;
+        public WebServer(IPAddress ip, int port)
+        {
+            _ip = ip ?? throw new ArgumentNullException(nameof(ip), "IP Address cannot be null");
+            _port = port > 0 ? port : throw new ArgumentOutOfRangeException(nameof(port), "Port must be positive");
         }
 
 
-        public async void Start() {
-            if (listener == null) {
-                listener = new HttpListener();
-                listener.Prefixes.Add(Url);
-
+        public async void Start()
+        {
+            if (_listener == null)
+            {
+                _listener = new HttpListener();
+                _listener.Prefixes.Add(Url);
+                _listener.Start();
+                Console.WriteLine($"The url of the webserver is {Url}");
             }
-
-            listener.Start();
-
-            Console.WriteLine($"The url of the webserver is {Url}");
 
             // Handle requests
-            while (_runServer) {
-                await HandleIncomingConnections();
+            try
+            {
+                while (_runServer)
+                {
+                    HttpListenerContext ctx = await _listener.GetContextAsync();
+                    await HandleIncomingConnections(ctx);
+                }
             }
-
-            //await HandleIncomingConnections();
-
-            // Close the listener
-            listener.Close();
+            finally
+            {
+                _listener.Close();
+            }
         }
 
-        public async void Stop() {
+        public async void Stop()
+        {
             _runServer = false;
         }
 
-        private async Task HandleIncomingConnections() {
+        private async Task HandleIncomingConnections(HttpListenerContext ctx)
+        {
 
-            await Task.Run(async () => {
+            await Task.Run(async () =>
+            {
                 // While a user hasn't visited the `shutdown` url, keep on handling requests
-                while (_runServer) {
+                while (_runServer)
+                {
 
                     // Will wait here until we hear from a connection
-                    HttpListenerContext ctx = await listener.GetContextAsync();
+                    HttpListenerContext ctx = await _listener.GetContextAsync();
 
                     // Peel out the requests and response objects
                     HttpListenerRequest req = ctx.Request;
                     HttpListenerResponse resp = ctx.Response;
 
                     // Print out some info about the request
-                    Console.WriteLine("Request #: {0}", ++requestCount);
+                    Console.WriteLine($"Request #: {++_requestCount}");
                     Console.WriteLine(req.Url);
                     Console.WriteLine(req.HttpMethod);
                     Console.WriteLine(req.UserHostName);
@@ -97,30 +105,36 @@ namespace TemperatureWarriorCode.Web {
 
 
                     // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
-                    if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown") {
+                    if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown")
+                    {
                         Console.WriteLine("Shutdown requested");
                         _runServer = false;
                     }
 
-                    if (req.Url.AbsolutePath == "/setparams") {
+                    if (req.Url.AbsolutePath == "/setparams")
+                    {
 
                         //Get parameters
                         string url = req.RawUrl;
-                        if (!string.IsNullOrWhiteSpace(url)) {
+                        if (!string.IsNullOrWhiteSpace(url))
+                        {
 
                             //Get text to the right from the interrogation mark
                             string[] urlParts = url.Split('?');
-                            if (urlParts?.Length >= 1) {
+                            if (urlParts?.Length >= 1)
+                            {
 
                                 //The parametes are in the array first position
                                 string[] parameters = urlParts[1].Split('&');
-                                if (parameters?.Length >= 2) {
+                                if (parameters?.Length >= 2)
+                                {
 
                                     // Param 5 => to pass
                                     string[] pass_parts = parameters[5].Split('=');
                                     string pass_temp = pass_parts[1];
 
-                                    if (string.Equals(pass, pass_temp)) {
+                                    if (string.Equals(pass, pass_temp))
+                                    {
 
                                         // Param 0 => Temp max
                                         string[] temp_max_parts = parameters[0].Split('=');
@@ -144,7 +158,7 @@ namespace TemperatureWarriorCode.Web {
                                         string[] refresh_parts = parameters[3].Split('=');
                                         Data.refresh = Int16.Parse(refresh_parts[1]);
                                         //Data.refresh = 1000;
-                                        
+
 
 
                                         // Param 4 => to round_time
@@ -153,16 +167,19 @@ namespace TemperatureWarriorCode.Web {
                                         //Data.round_time = new string[] { "5", "15" };
                                         Data.round_time = round_time_parts[1].Split(";");
 
-                                        if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
+                                        if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true))
+                                        {
                                             message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
                                         }
 
-                                        else {
+                                        else
+                                        {
                                             message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
                                             ready = true;
                                         }
                                     }
-                                    else {
+                                    else
+                                    {
                                         message = "La contrase&ntilde;a es incorrecta.";
                                     }
                                 }
@@ -170,27 +187,30 @@ namespace TemperatureWarriorCode.Web {
                         }
 
                     }
-                    if (req.Url.AbsolutePath == "/start") {
+                    if (req.Url.AbsolutePath == "/start")
+                    {
 
                         // Start the round
                         Thread ronda = new Thread(MeadowApp.StartRound);
                         ronda.Start();
 
                         // Wait for the round to finish
-                        while (Data.is_working) {
+                        while (Data.is_working)
+                        {
                             Thread.Sleep(1000);
                         }
                         ready = false;
 
                         message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
                     }
-                    if (req.Url.AbsolutePath == "/temp") {
+                    if (req.Url.AbsolutePath == "/temp")
+                    {
                         message = $"La temperatura actual es {Data.temp_act}";
                     }
 
                     // Write the response info
                     string disableSubmit = !_runServer ? "disabled" : "";
-                    byte[] data = Encoding.UTF8.GetBytes(string.Format(writeHTML(message), pageViews, disableSubmit));
+                    byte[] data = Encoding.UTF8.GetBytes(string.Format(writeHTML(message), _pageViews, disableSubmit));
                     resp.ContentType = "text/html";
                     resp.ContentEncoding = Encoding.UTF8;
                     resp.ContentLength64 = data.LongLength;
@@ -202,67 +222,45 @@ namespace TemperatureWarriorCode.Web {
             });
         }
 
+        public static string showData(string[] data)
+        {
+            if (data == null) return string.Empty;
 
-        public static string mostarDatos(string[] data) {
-            string datos = string.Empty;
-            if (data != null) {
-                for (int i = 0; i < data.Length; i++) {
-                    datos = datos + data[i] + ";";
-                }
-
-                return datos;
+            StringBuilder datos = new StringBuilder();
+            foreach (var item in data)
+            {
+                datos.Append(item + ";");
             }
-            else {
-                return "";
-            }
+            return datos.ToString();
         }
 
-        public static bool tempCheck(string[] data, bool tipo) {
-            if (data != null) {
-                for (int i = 0; i < data.Length; i++) {
-                    if (tipo) {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) < 12) {
-                            return false;
-                        }
-                    }
-                    else {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) > 30) {
-                            return false;
-                        }
-                    }
+        public static bool tempCheck(string[] data, bool tipo)
+        {
+            if (data == null) return true; // Early exit if data is null
+
+            double limit = tipo ? 12 : 30; // Determine the temperature limit based on tipo
+            foreach (string temp in data)
+            {
+                if (double.TryParse(temp, out double tempValue) && ((tipo && tempValue < limit) || (!tipo && tempValue > limit)))
+                {
+                    return false;
                 }
-                return true;
             }
             return true;
         }
 
-        public static string writeHTML(string message) {
-            // If we are already ready, disable all the inputs
-            string disabled = "";
-            if (ready) {
-                disabled = "disabled";
-            }
+        public static string writeHTML(string message)
+        {
+            var disabled = ready ? "disabled" : "";
+            var saveButton = ready ? "" : "<button type=\"button\" onclick='save()'>Guardar</button>";
+            var tempLink = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
+            var startButton = ready && !Data.is_working ? "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>" : "";
+            var graphCanvas = ""; // Assume logic for setting this value
 
-            // Only show save and cooler mode in configuration mode and start round when we are ready
-            string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
-            string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
-            string graph = "";
-            if (ready) {
-                save = "";
-            }
-            string start = "";
-            if (ready) {
-                start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
-            }
-            if (Data.is_working) {
-                start = "";
-            }
             /*if (Data.csv_counter != 0) {
-                graph = "<canvas id='myChart' width='0' height='0'></canvas>";
+                graphCanvas = "<canvas id='myChart' width='0' height='0'></canvas>";
                 message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
             }*/
-
-
 
             //Write the HTML page
             string html = "<!DOCTYPE html>" +
@@ -294,7 +292,7 @@ namespace TemperatureWarriorCode.Web {
                             "function temp(){{" +
                             "console.log(\"Calling temp in JS!!\");" +
                             "location.href = 'temp'" +
-                            "}} " + 
+                            "}} " +
                             "function start(){{location.href = 'start'}}" +
                             "</script>" +
 
@@ -318,13 +316,13 @@ namespace TemperatureWarriorCode.Web {
                             "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
                             "<div class='form-row tm-search-form-row'>" +
                             "<div class='form-group tm-form-element tm-form-element-100'>" +
-                            "<p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + mostarDatos(Data.temp_max) + "' " + disabled + "></input></p>" +
+                            "<p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + showData(Data.temp_max) + "' " + disabled + "></input></p>" +
                             "</div>" +
                             "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + mostarDatos(Data.temp_min) + "' " + disabled + "></input></p>" +
+                            "<p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + showData(Data.temp_min) + "' " + disabled + "></input></p>" +
                             "</div>" +
                             "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + mostarDatos(Data.round_time) + "' " + disabled + "></input></p>" +
+                            "<p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + showData(Data.round_time) + "' " + disabled + "></input></p>" +
                             "</div>" +
                             "</div>" +
                             "<div class='form-row tm-search-form-row'>" +
@@ -340,10 +338,10 @@ namespace TemperatureWarriorCode.Web {
 
                             "</form>" +
                             "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            save + start +
+                            saveButton + startButton +
                             "</div>" +
                             "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            temp +
+                            tempLink +
                             "</div>" +
                             "</div>" +
                             "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
@@ -354,7 +352,7 @@ namespace TemperatureWarriorCode.Web {
                             "</div>" +
 
                             "<div class='container ie-h-align-center-fix'>" +
-                            graph +
+                            graphCanvas +
                             "</div>" +
             "</body>" +
             "</html>";

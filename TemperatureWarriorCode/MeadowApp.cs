@@ -41,27 +41,29 @@ namespace TemperatureWarriorCode {
                 sensor.StartUpdating(TimeSpan.FromSeconds(2)); // 2 secs are very important!!!!
 
                 // TODO Local Network configuration (uncomment when needed)
-                //var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
-                //wifi.NetworkConnected += WiFiAdapter_ConnectionCompleted;
+                var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
+                wifi.NetworkConnected += WiFiAdapter_ConnectionCompleted;
 
-                ////WiFi Channel
-                //WifiNetwork wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
+                //WiFi Channel
+                WifiNetwork wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
 
-                //wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
-                //await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
+                wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
+                await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
 
-                //string IPAddress = wifi.IpAddress.ToString();
+                string IPAddress = wifi.IpAddress.ToString();
 
-                ////Connnect to the WiFi network.
-                //Console.WriteLine($"IP Address: {IPAddress}");
-                //Data.IP = IPAddress;
-                //if (!string.IsNullOrWhiteSpace(IPAddress)) {
-                //    Data.IP = IPAddress;
-                //    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
-                //    if (webServer != null) {
-                //        webServer.Start();
-                //    }
-                //}
+                //Connnect to the WiFi network.
+                Console.WriteLine($"IP Address test: {IPAddress}");
+                Data.IP = IPAddress;
+                if (!string.IsNullOrWhiteSpace(IPAddress))
+                {
+                    Data.IP = IPAddress;
+                    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
+                    if (webServer != null)
+                    {
+                        webServer.Start();
+                    }
+                }
 
                 Console.WriteLine("Meadow Initialized!");
 
