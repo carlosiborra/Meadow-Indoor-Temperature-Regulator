@@ -37,8 +37,8 @@ namespace TemperatureWarriorCode {
                 // TODO uncomment when needed 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
-                sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                sensor.StartUpdating(TimeSpan.FromSeconds(2));
+                sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
+                sensor.StartUpdating(TimeSpan.FromSeconds(2)); // 2 secs are very important!!!!
 
                 // TODO Local Network configuration (uncomment when needed)
                 //var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
