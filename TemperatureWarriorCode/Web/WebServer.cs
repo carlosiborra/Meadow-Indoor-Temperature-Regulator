@@ -5,6 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
+using System.Runtime.CompilerServices;
+using Meadow.Units;
+using System.Xml.Linq;
+using YamlDotNet.Core.Tokens;
+using Meadow.Foundation.Graphics;
+using Meadow.Peripherals.Displays;
 
 namespace TemperatureWarriorCode.Web
 {
@@ -111,114 +117,121 @@ namespace TemperatureWarriorCode.Web
                         _runServer = false;
                     }
 
-                    if (req.Url.AbsolutePath == "/setparams")
-                    {
-
-                        //Get parameters
-                        string url = req.RawUrl;
-                        if (!string.IsNullOrWhiteSpace(url))
+                    try {
+                        if (req.Url.AbsolutePath == "/setparams")
                         {
 
-                            //Get text to the right from the interrogation mark
-                            string[] urlParts = url.Split('?');
-                            if (urlParts?.Length >= 1)
+                            //Get parameters
+                            string url = req.RawUrl;
+                            if (!string.IsNullOrWhiteSpace(url))
                             {
 
-                                //The parametes are in the array first position
-                                string[] parameters = urlParts[1].Split('&');
-                                if (parameters?.Length >= 2)
+                                //Get text to the right from the interrogation mark
+                                string[] urlParts = url.Split('?');
+                                if (urlParts?.Length >= 1)
                                 {
 
-                                    // Param 5 => to pass
-                                    string[] pass_parts = parameters[5].Split('=');
-                                    string pass_temp = pass_parts[1];
-
-                                    if (string.Equals(pass, pass_temp))
+                                    //The parametes are in the array first position
+                                    string[] parameters = urlParts[1].Split('&');
+                                    if (parameters?.Length >= 2)
                                     {
 
-                                        // Param 0 => Temp max
-                                        string[] temp_max_parts = parameters[0].Split('=');
-                                        //string[] temp_max_final = temp_max_parts[1].Split(";");
-                                        //Data.temp_max = new string[] { temp_max_parts[1].Split(";") };
-                                        Data.temp_max = temp_max_parts[1].Split(";");
+                                        // Param 5 => to pass
+                                        string[] pass_parts = parameters[5].Split('=');
+                                        string pass_temp = pass_parts[1];
 
-
-                                        // Param 1 => Temp min
-                                        string[] temp_min_parts = parameters[1].Split('=');
-                                        //Data.temp_min = new string[] { temp_min_parts[1] };
-                                        //Data.temp_min = new string[] { "12", "12" };
-                                        Data.temp_min = temp_min_parts[1].Split(";");
-
-                                        // Param 2 => to display_refresh
-                                        string[] display_refresh_parts = parameters[2].Split('=');
-                                        Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
-                                        //Data.display_refresh = 1000;
-
-                                        // Param 3 => to refresh
-                                        string[] refresh_parts = parameters[3].Split('=');
-                                        Data.refresh = Int16.Parse(refresh_parts[1]);
-                                        //Data.refresh = 1000;
-
-
-
-                                        // Param 4 => to round_time
-                                        string[] round_time_parts = parameters[4].Split('=');
-                                        //Data.round_time = new string[] { round_time_parts[1] };
-                                        //Data.round_time = new string[] { "5", "15" };
-                                        Data.round_time = round_time_parts[1].Split(";");
-
-                                        if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true))
+                                        if (string.Equals(pass, pass_temp))
                                         {
-                                            message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
-                                        }
 
+                                            // Param 0 => Temp max
+                                            string[] temp_max_parts = parameters[0].Split('=');
+                                            //string[] temp_max_final = temp_max_parts[1].Split(";");
+                                            //Data.temp_max = new string[] { temp_max_parts[1].Split(";") };
+                                            Data.temp_max = temp_max_parts[1].Split(";");
+
+
+                                            // Param 1 => Temp min
+                                            string[] temp_min_parts = parameters[1].Split('=');
+                                            //Data.temp_min = new string[] { temp_min_parts[1] };
+                                            //Data.temp_min = new string[] { "12", "12" };
+                                            Data.temp_min = temp_min_parts[1].Split(";");
+
+                                            // Param 2 => to display_refresh
+                                            string[] display_refresh_parts = parameters[2].Split('=');
+                                            Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
+                                            //Data.display_refresh = 1000;
+
+                                            // Param 3 => to refresh
+                                            string[] refresh_parts = parameters[3].Split('=');
+                                            Data.refresh = Int16.Parse(refresh_parts[1]);
+                                            //Data.refresh = 1000;
+
+
+
+                                            // Param 4 => to round_time
+                                            string[] round_time_parts = parameters[4].Split('=');
+                                            //Data.round_time = new string[] { round_time_parts[1] };
+                                            //Data.round_time = new string[] { "5", "15" };
+                                            Data.round_time = round_time_parts[1].Split(";");
+
+                                            if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true))
+                                            {
+                                                message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
+                                            }
+
+                                            else
+                                            {
+                                                message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
+                                                ready = true;
+                                            }
+                                        }
                                         else
                                         {
-                                            message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
-                                            ready = true;
+                                            message = "La contrase&ntilde;a es incorrecta.";
                                         }
-                                    }
-                                    else
-                                    {
-                                        message = "La contrase&ntilde;a es incorrecta.";
                                     }
                                 }
                             }
+
                         }
-
-                    }
-                    if (req.Url.AbsolutePath == "/start")
-                    {
-
-                        // Start the round
-                        Thread ronda = new Thread(MeadowApp.StartRound);
-                        ronda.Start();
-
-                        // Wait for the round to finish
-                        while (Data.is_working)
+                        else if (req.Url.AbsolutePath == "/start")
                         {
-                            Thread.Sleep(1000);
+
+                            // Start the round
+                            Thread ronda = new Thread(MeadowApp.StartRound);
+                            ronda.Start();
+
+                            // Wait for the round to finish
+                            while (Data.is_working)
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            ready = false;
+
+                            message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
                         }
-                        ready = false;
+                        else if (req.Url.AbsolutePath == "/temp")
+                        {
+                            message = $"La temperatura actual es {Data.temp_act}";
+                        }
+                        // Write the response info
+                        string disableSubmit = !_runServer ? "disabled" : "";
+                        byte[] data = Encoding.UTF8.GetBytes(writeHTML(message, _pageViews, disableSubmit));
+                        resp.ContentType = "text/html";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = data.LongLength;
 
-                        message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
+                        // Write out to the response stream (asynchronously), then close it
+                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                        resp.Close();
                     }
-                    if (req.Url.AbsolutePath == "/temp")
+                    catch (Exception ex)
                     {
-                        message = $"La temperatura actual es {Data.temp_act}";
+                        Console.WriteLine(ex.Message);
+                        resp.Close();
                     }
-
-                    // Write the response info
-                    string disableSubmit = !_runServer ? "disabled" : "";
-                    byte[] data = Encoding.UTF8.GetBytes(string.Format(writeHTML(message), _pageViews, disableSubmit));
-                    resp.ContentType = "text/html";
-                    resp.ContentEncoding = Encoding.UTF8;
-                    resp.ContentLength64 = data.LongLength;
-
-                    // Write out to the response stream (asynchronously), then close it
-                    await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                    resp.Close();
                 }
+
             });
         }
 
@@ -249,115 +262,201 @@ namespace TemperatureWarriorCode.Web
             return true;
         }
 
-        public static string writeHTML(string message)
+        public static string writeHTML(string message, int pageViews, string disableSubmit)
         {
+
+            // Variables
             var disabled = ready ? "disabled" : "";
             var saveButton = ready ? "" : "<button type=\"button\" onclick='save()'>Guardar</button>";
             var tempLink = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
             var startButton = ready && !Data.is_working ? "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>" : "";
             var graphCanvas = ""; // Assume logic for setting this value
 
-            /*if (Data.csv_counter != 0) {
-                graphCanvas = "<canvas id='myChart' width='0' height='0'></canvas>";
-                message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
-            }*/
+            // CSS variables
+            string backgroundColor = "#f2f2f2";
+            string textColor = "#1e1e1e1";
 
-            //Write the HTML page
-            string html = "<!DOCTYPE html>" +
-            "<html>" +
-            "<head>" +
-                            "<meta charset='utf - 8'>" +
-                            "<meta http - equiv = 'X-UA-Compatible' content = 'IE=edge'>" +
-                            "<meta name = 'viewport' content = 'width=device-width, initial-scale=1' > " +
-                            "<title>Meadow Controller</title>" +
-                            "<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700'>" +
-                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/bootstrap.min.css'>" +
-                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/tooplate-style.css' >" +
-                            "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
+            // Note: Using string interpolation with a verbatim string literal
+            // needs double curly braces as single ones are used for string interpolation
 
+            // Graph canvas and 
+            //if (Data.csv_counter != 0) {
+            //    graphCanvas = "<canvas id='myChart' width='0' height='0'></canvas>";
+            //    message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
+            //}
 
-            "</head>" +
+            // CSS styles
+            string cssStyles = $@"
+                /* CSS styles here */
 
-            "<body>" +
-                            "<script> function save(){{" +
-                            "console.log(\"Calling Save in JS!!\");" +
-                            "var tempMax = document.forms['params']['tempMax'].value;" +
-                            "var tempMin = document.forms['params']['tempMin'].value;" +
-                            "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                            "var refresh = document.forms['params']['refresh'].value;" +
-                            "var time = document.forms['params']['time'].value;" +
-                            "var pass = document.forms['params']['pass'].value;" +
-                            "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
-                            "}} " +
-                            "function temp(){{" +
-                            "console.log(\"Calling temp in JS!!\");" +
-                            "location.href = 'temp'" +
-                            "}} " +
-                            "function start(){{location.href = 'start'}}" +
-                            "</script>" +
+                html, body {{
+                    font-family: 'Open Sans', sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: {backgroundColor};
+                    color: {textColor};
+                }}
 
-                            "<div class='tm-main-content' id='top'>" +
-                            "<div class='tm-top-bar-bg'></div>" +
-                            "<div class='container'>" +
-                            "<div class='row'>" +
-                            "<nav class='navbar navbar-expand-lg narbar-light'>" +
-                            "<a class='navbar-brand mr-auto' href='#'>" +
-                            "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
-                            "</a>" +
-                            "</nav>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "<div class='tm-section tm-bg-img' id='tm-section-1'>" +
-                            "<div class='tm-bg-white ie-container-width-fix-2'>" +
-                            "<div class='container ie-h-align-center-fix'>" +
-                            "<div class='row'>" +
-                            "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
-                            "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
-                            "<div class='form-row tm-search-form-row'>" +
-                            "<div class='form-group tm-form-element tm-form-element-100'>" +
-                            "<p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + showData(Data.temp_max) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + showData(Data.temp_min) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + showData(Data.round_time) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "</div>" +
-                            "<div class='form-row tm-search-form-row'>" +
-                            "<div class='form-group tm-form-element tm-form-element-100'>" +
-                            "<p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='" + Data.display_refresh + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='" + Data.refresh + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'> </input></p>" +
-                            "</div>" +
+                .navbar {{
+                    background-color: #007bff;
+                    color: #ffffff;
+                    padding: 10px;
+                }}
 
-                            "</form>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            saveButton + startButton +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            tempLink +
-                            "</div>" +
-                            "</div>" +
-                            "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
+                .navbar h1, .navbar h3 {{
+                    color: #ffffff;
+                }}
 
-                            "<div class='container ie-h-align-center-fix'>" +
-                            graphCanvas +
-                            "</div>" +
-            "</body>" +
-            "</html>";
+                .navbar-brand {{
+                    display: flex;
+                    align-items: center;
+                }}
+
+                .tm-main-content {{
+                    padding: 20px;
+                    background-color: #ffffff;
+                    margin-bottom: 20px;
+                }}
+
+                .tm-section {{
+                    margin-top: 20px;
+                }}
+
+                .tm-form-element {{
+                    margin-bottom: 15px;
+                }}
+
+                .form-control {{
+                    width: 100%;
+                    padding: 10px;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }}
+
+                button, .btn-primary {{
+                    background - color: #007bff;
+                    color: #ffffff;
+                    border: none;
+                    padding: 10px 20px;
+                    cursor: pointer;
+                    border-radius: 5px;
+                }}
+
+                button:hover, .btn-primary:hover {{
+                    background-color: #0056b3;
+                }}
+            ";
+
+            // JS scripts
+            string jsScripts = @"
+                /* JavaScript scripts here */
+
+                function save() {
+                    console.log('Calling Save in JS!!');
+                    var tempMax = document.forms['params']['tempMax'].value;
+                    var tempMin = document.forms['params']['tempMin'].value;
+                    var displayRefresh = document.forms['params']['displayRefresh'].value;
+                    var refresh = document.forms['params']['refresh'].value;
+                    var time = document.forms['params']['time'].value;
+                    var pass = document.forms['params']['pass'].value;
+                    location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;
+                }
+
+                function temp() {
+                    console.log('Calling temp in JS!!');
+                    location.href = 'temp';
+                }
+
+                function start() {
+                    console.log('Calling start in JS!!');
+                    location.href = 'start';
+                }
+            ";
+
+            // Write the HTML page
+            string html = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                     <meta charset='utf-8'>
+                    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1'>
+                    <title>Meadow Controller</title>
+                    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700'>
+                    <link rel='stylesheet' href='http://127.0.0.1:8887/css/bootstrap.min.css'>
+                    <link rel='stylesheet' href='http://127.0.0.1:8887/css/tooplate-style.css'>
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'></script>
+                    <style>
+                        {cssStyles}
+                    </style>
+                </head>
+                <body>
+                    <script>
+                        {jsScripts}
+                    </script>
+                    <div class='tm-main-content' id='top'>
+                        <div class='tm-top-bar-bg'></div>
+                        <div class='container'>
+                            <div class='row'>
+                                <nav class='navbar navbar-expand-lg navbar-light'>
+                                    <h1>Meadow Controller</h1>
+                                    <h3>Group 01</h3>
+                                    <a class='navbar-brand mr-auto' href='#'>
+                                        <img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                        <div class='tm-section tm-bg-img' id='tm-section-1'>
+                            <div class='tm-bg-white ie-container-width-fix-2'>
+                                <div class='container ie-h-align-center-fix'>
+                                    <div class='row'>
+                                        <div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>
+                                            <form name='params' method='get' class='tm-search-form tm-section-pad-2'>
+                                                <div class='form-row tm-search-form-row'>
+                                                    <div class='form-group tm-form-element tm-form-element-100'>
+                                                        <p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='{showData(Data.temp_max)}' '{disabled}'></p>
+                                                    </div>
+                                                    <div class='form-group tm-form-element tm-form-element-50'>
+                                                        <p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='{showData(Data.temp_min)}' '{disabled}'></p>
+                                                    </div>
+                                                    <div class='form-group tm-form-element tm-form-element-50'>
+                                                        <p>Duración Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='{showData(Data.round_time)}' '{disabled}'></p>
+                                                    </div>
+                                                </div>
+                                                <div class='form-row tm-search-form-row'>
+                                                    <div class='form-group tm-form-element tm-form-element-100'>
+                                                        <p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='{Data.display_refresh}' '{disabled}'></p>
+                                                    </div>
+                                                    <div class='form-group tm-form-element tm-form-element-50'>
+                                                        <p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='{Data.refresh}' '{disabled}'></p>
+                                                    </div>
+                                                    <div class='form-group tm-form-element tm-form-element-50'>
+                                                        <p>Contraseña<input name='pass' type='password' class='form-control'></p>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div class='form-group tm-form-element tm-form-element-50'>
+                                                {saveButton}{startButton}
+                                            </div>
+                                            <div class='form-group tm-form-element tm-form-element-50'>
+                                                {tempLink}
+                                            </div>
+                                        </div>
+                                        <p style='text-align:center;font-weight:bold;'>{message}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='container ie-h-align-center-fix'>
+                        {graphCanvas}
+                    </div>
+                </body>
+                </html>
+            ";
+
             return html;
         }
-
     }
 }
