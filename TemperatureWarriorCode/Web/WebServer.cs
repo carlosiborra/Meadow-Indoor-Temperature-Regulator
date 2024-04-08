@@ -297,54 +297,147 @@ namespace TemperatureWarriorCode.Web
                     color: {textColor};
                 }}
 
-                .navbar {{
-                    background-color: #007bff;
-                    color: #ffffff;
-                    padding: 10px;
-                }}
-
-                .navbar h1, .navbar h3 {{
-                    color: #ffffff;
-                }}
-
-                .navbar-brand {{
-                    display: flex;
-                    align-items: center;
-                }}
-
                 .tm-main-content {{
-                    padding: 20px;
-                    background-color: #ffffff;
-                    margin-bottom: 20px;
-                }}
+        margin-top: 20px;
+    }
 
-                .tm-section {{
-                    margin-top: 20px;
-                }}
+    .tm-section {{
+        margin: 20px;
+        background-color: #fff;
+        padding: 20px;
+    }}
 
-                .tm-form-element {{
-                    margin-bottom: 15px;
-                }}
+    body {{
+        font-family: 'Open Sans', sans-serif;
+        background-color: #24303c;
+        margin: 0;
+        padding: 0;
+    }}
 
-                .form-control {{
-                    width: 100%;
-                    padding: 10px;
-                    border: 1px solid #ccc;
-                    border-radius: 5px;
-                }}
+    .container {{
+        width: 80%;
+        margin: auto;
+        overflow: hidden;
+    }}
 
-                button, .btn-primary {{
-                    background - color: #007bff;
-                    color: #ffffff;
-                    border: none;
-                    padding: 10px 20px;
-                    cursor: pointer;
-                    border-radius: 5px;
-                }}
+    .navbar {{
+        background-color: #333;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+    }}
 
-                button:hover, .btn-primary:hover {{
-                    background-color: #0056b3;
-                }}
+    .navbar a.navbar-brand {{
+        color: #ffffff;
+        text-decoration: none;
+    }}
+
+    .navbar-brand img {{
+        max-width: 100%;
+        height: auto;
+    }}
+
+    .tm-section {{
+        background-color: #24303c;
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }}
+
+    .form-group {{
+        margin-bottom: 15px;
+    }}
+
+    .form-group a,
+    .form-group p {{
+        margin: 0;
+        font-size: 18px;
+        color: #ffffff;
+    }}
+
+    input[type='text'],
+    input[type='number'],
+    input[type='password'],
+    input[type='text']:focus,
+    input[type='number']:focus,
+    input[type='password']:focus {{
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        border: 2px solid #449d44;
+        box-sizing: border-box;
+        background: #182d43;
+        color: #ffffff;
+    }}
+
+    input[type='text']:disabled,
+    input[type='number']:disabled {{
+        background-color: #182d43;
+        border: 2px solid #fa5454;
+    }}
+
+    input[type='submit'],
+    button {{
+        background-color: #1f53c5;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }}
+
+    input[type='submit']:hover,
+    button:hover {{
+        background-color: #1a4195;
+    }}
+
+    input[type='button']:hover {{
+        background-color: #286090;
+    }}
+
+    .tm-form-element {{
+        display: flex;
+        flex-direction: column;
+    }}
+
+    .tm-search-form-row {{
+        margin-bottom: 20px;
+    }}
+
+    .tm-form-element-50 {{
+        flex-basis: 50%;
+    }}
+
+    .tm-form-element-100 {{
+        flex-basis: 100%;
+    }}
+
+    @media (max-width: 768px) {{
+        .form-group {{
+            width: 100%;
+        }}
+
+        .tm-form-element-50,
+        .tm-form-element-100 {{
+            flex-basis: 100%;
+        }}
+    }}
+
+    /* Styles for the graph placeholder */
+    .graph-placeholder {{
+        width: 100%;
+        background: #ddd;
+        color: #333;
+        text-align: center;
+        padding: 50px 0;
+        margin-top: 20px;
+        border-radius: 8px;
+    }}
             ";
 
             // JS scripts
@@ -398,57 +491,66 @@ namespace TemperatureWarriorCode.Web
                         <div class='tm-top-bar-bg'></div>
                         <div class='container'>
                             <div class='row'>
-                                <nav class='navbar navbar-expand-lg navbar-light'>
-                                    <h1>Meadow Controller</h1>
-                                    <h3>Group 01</h3>
+                                <nav class='navbar navbar-expand-lg narbar-light'>
                                     <a class='navbar-brand mr-auto' href='#'>
-                                        <img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>
+                                        <img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700'
+                                            height='300'>
                                     </a>
                                 </nav>
                             </div>
                         </div>
-                        <div class='tm-section tm-bg-img' id='tm-section-1'>
-                            <div class='tm-bg-white ie-container-width-fix-2'>
-                                <div class='container ie-h-align-center-fix'>
-                                    <div class='row'>
-                                        <div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>
-                                            <form name='params' method='get' class='tm-search-form tm-section-pad-2'>
-                                                <div class='form-row tm-search-form-row'>
-                                                    <div class='form-group tm-form-element tm-form-element-100'>
-                                                        <p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='{showData(Data.temp_max)}' '{disabled}'></p>
-                                                    </div>
-                                                    <div class='form-group tm-form-element tm-form-element-50'>
-                                                        <p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='{showData(Data.temp_min)}' '{disabled}'></p>
-                                                    </div>
-                                                    <div class='form-group tm-form-element tm-form-element-50'>
-                                                        <p>Duración Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='{showData(Data.round_time)}' '{disabled}'></p>
-                                                    </div>
+                    </div>
+                    <div class='tm-section tm-bg-img' id='tm-section-1'>
+                        <div class='tm-bg-white ie-container-width-fix-2'>
+                            <div class='container ie-h-align-center-fix'>
+                                <div class='row'>
+                                    <div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>
+                                        <form name='params' method='get' class='tm-search-form tm-section-pad-2'>
+                                            <div class='form-row tm-search-form-row'>
+                                                <div class='form-group tm-form-element tm-form-element-100'>
+                                                    <p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text'
+                                                            class='form-control' value='  mostarDatos(Data.temp_max)  '
+                                                            disabled></input></p>
                                                 </div>
-                                                <div class='form-row tm-search-form-row'>
-                                                    <div class='form-group tm-form-element tm-form-element-100'>
-                                                        <p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='{Data.display_refresh}' '{disabled}'></p>
-                                                    </div>
-                                                    <div class='form-group tm-form-element tm-form-element-50'>
-                                                        <p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='{Data.refresh}' '{disabled}'></p>
-                                                    </div>
-                                                    <div class='form-group tm-form-element tm-form-element-50'>
-                                                        <p>Contraseña<input name='pass' type='password' class='form-control'></p>
-                                                    </div>
+                                                <div class='form-group tm-form-element tm-form-element-50'>
+                                                    <p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text'
+                                                            class='form-control' value='  mostarDatos(Data.temp_min)  '
+                                                            disabled></input></p>
                                                 </div>
-                                            </form>
-                                            <div class='form-group tm-form-element tm-form-element-50'>
-                                                {saveButton}{startButton}
+                                                <div class='form-group tm-form-element tm-form-element-50'>
+                                                    <p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text'
+                                                            class='form-control' value='  mostarDatos(Data.round_time)  '
+                                                            disabled></input></p>
+                                                </div>
                                             </div>
-                                            <div class='form-group tm-form-element tm-form-element-50'>
-                                                {tempLink}
-                                            </div>
+                                            <div class='form-row tm-search-form-row'>
+                                                <div class='form-group tm-form-element tm-form-element-100'>
+                                                    <p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number'
+                                                            class='form-control' value='  Data.display_refresh  ' disabled></input></p>
+                                                </div>
+                                                <div class='form-group tm-form-element tm-form-element-50'>
+                                                    <p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number'
+                                                            class='form-control' value='  Data.refresh  ' disabled></input></p>
+                                                </div>
+                                                <div class='form-group tm-form-element tm-form-element-50'>
+                                                    <p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'>
+                                                        </input></p>
+                                                </div>
+
+                                        </form>
+                                        <div class='form-group tm-form-element tm-form-element-50'>
+                                            {saveButton}{startButton}
                                         </div>
-                                        <p style='text-align:center;font-weight:bold;'>{message}</p>
+                                        <div class='form-group tm-form-element tm-form-element-50'>
+                                            {tempLink}
+                                        </div>
                                     </div>
+                                    <p style='text-align:center;font-weight:bold;'>{message}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class='container ie-h-align-center-fix'>
                         {graphCanvas}
                     </div>
