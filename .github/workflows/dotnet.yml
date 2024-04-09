@@ -21,10 +21,11 @@ jobs:
     # as it is ignored by default for security reasons
     - name: Create Secrets.cs if not exists
       run: |
-        $path = "../TemperatureWarriorCode/Secrets.cs"
+        $path = "./TemperatureWarriorCode/Secrets.cs"
         if (-Not (Test-Path $path)) {
             New-Item -ItemType File -Path $path -Force
             @"
+    
             namespace TemperatureWarriorCode {
                 internal class Secrets {
                     // WiFi name
@@ -33,7 +34,7 @@ jobs:
                     public const string WIFI_PASSWORD = "password";
                 }
             }
-"@ | Set-Content $path
+            "@ | Set-Content $path
         }
       shell: pwsh
 
