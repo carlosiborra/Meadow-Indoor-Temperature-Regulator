@@ -16,13 +16,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    # Check for Secrets.cs file and create if it does not exist
+    # as it is ignored by default for security reasons
+    - name: Create Secrets.cs if not exists
+      run: |
+        $path = "TemperatureWarriorCode/Secrets.cs"
+        if (-Not (Test-Path $path)) {
+            New-Item -ItemType File -Path $path -Force
+            @"
+            namespace TemperatureWarriorCode {
+              internal class Secrets {
+              // WiFi name
+              public const string WIFI_NAME = "name";
+              // WiFi password
+              public const string WIFI_PASSWORD = "password";
+              }
+            }
+            "@ | Set-Content $path
+          }
+      shell: pwsh
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8.0.x
+    
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Build
       run: dotnet build --no-restore
+    
     - name: Test
       run: dotnet test --no-build --verbosity normal
