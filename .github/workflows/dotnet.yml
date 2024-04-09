@@ -24,20 +24,16 @@ jobs:
         $path = "./TemperatureWarriorCode/Secrets.cs"
         if (-Not (Test-Path $path)) {
             New-Item -ItemType File -Path $path -Force
-            @"
-    
-            namespace TemperatureWarriorCode {
-                internal class Secrets {
-                    // WiFi name
-                    public const string WIFI_NAME = "name";
-                    // WiFi password
-                    public const string WIFI_PASSWORD = "password";
-                }
-            }
-            "@ | Set-Content $path
         }
+        Add-Content $path 'namespace TemperatureWarriorCode {'
+        Add-Content $path '    internal class Secrets {'
+        Add-Content $path '        // WiFi name'
+        Add-Content $path '        public const string WIFI_NAME = "name";'
+        Add-Content $path '        // WiFi password'
+        Add-Content $path '        public const string WIFI_PASSWORD = "password";'
+        Add-Content $path '    }'
+        Add-Content $path '}'
       shell: pwsh
-
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
