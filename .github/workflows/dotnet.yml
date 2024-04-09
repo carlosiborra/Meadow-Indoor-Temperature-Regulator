@@ -32,9 +32,8 @@ jobs:
                     // WiFi password
                     public const string WIFI_PASSWORD = "password";
                 }
-            }
-            "@ | Set-Content $path
-          }
+            }"@ | Set-Content $path
+        }
       shell: pwsh
 
 
