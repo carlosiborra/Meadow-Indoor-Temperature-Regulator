@@ -297,8 +297,13 @@ namespace TemperatureWarriorCode.Web
                     color: {textColor};
                 }}
 
+                p {{
+                    color: #ffffff;
+                }}
+
                 .tm-main-content {{
                     margin-top: 20px;
+                    padding: 20px;
                 }}
 
                 .tm-section {{
@@ -321,11 +326,12 @@ namespace TemperatureWarriorCode.Web
                 }}
 
                 .navbar {{
-                    background-color: #333;
+                    background-color: #fff;
                     color: #ffffff;
                     display: flex;
                     align-items: center;
-                    padding: 10px 0;
+                    padding: 10px 20px;
+                    border-radius: 20px;
                 }}
 
                 .navbar a.navbar-brand {{
@@ -372,6 +378,7 @@ namespace TemperatureWarriorCode.Web
                     box-sizing: border-box;
                     background: #182d43;
                     color: #ffffff;
+                    outline: none;
                 }}
 
                 input[type='text']:disabled,
@@ -493,7 +500,7 @@ namespace TemperatureWarriorCode.Web
                             <div class='row'>
                                 <nav class='navbar navbar-expand-lg narbar-light'>
                                     <a class='navbar-brand mr-auto' href='#'>
-                                        <img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700'
+                                        <img id='logo' class='logo' src='https://gitlab.msu.edu/uploads/-/system/project/avatar/6141/gitlab-ci-cd-logo_2x.png' alt='Site logo' width='700'
                                             height='300'>
                                     </a>
                                 </nav>
