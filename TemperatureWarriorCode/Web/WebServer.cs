@@ -298,146 +298,146 @@ namespace TemperatureWarriorCode.Web
                 }}
 
                 .tm-main-content {{
-        margin-top: 20px;
-    }
+                    margin-top: 20px;
+                }}
 
-    .tm-section {{
-        margin: 20px;
-        background-color: #fff;
-        padding: 20px;
-    }}
+                .tm-section {{
+                    margin: 20px;
+                    background-color: #fff;
+                    padding: 20px;
+                }}
 
-    body {{
-        font-family: 'Open Sans', sans-serif;
-        background-color: #24303c;
-        margin: 0;
-        padding: 0;
-    }}
+                body {{
+                    font-family: 'Open Sans', sans-serif;
+                    background-color: #24303c;
+                    margin: 0;
+                    padding: 0;
+                }}
 
-    .container {{
-        width: 80%;
-        margin: auto;
-        overflow: hidden;
-    }}
+                .container {{
+                    width: 80%;
+                    margin: auto;
+                    overflow: hidden;
+                }}
 
-    .navbar {{
-        background-color: #333;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        padding: 10px 0;
-    }}
+                .navbar {{
+                    background-color: #333;
+                    color: #ffffff;
+                    display: flex;
+                    align-items: center;
+                    padding: 10px 0;
+                }}
 
-    .navbar a.navbar-brand {{
-        color: #ffffff;
-        text-decoration: none;
-    }}
+                .navbar a.navbar-brand {{
+                    color: #ffffff;
+                    text-decoration: none;
+                }}
 
-    .navbar-brand img {{
-        max-width: 100%;
-        height: auto;
-    }}
+                .navbar-brand img {{
+                    max-width: 100%;
+                    height: auto;
+                }}
 
-    .tm-section {{
-        background-color: #24303c;
-        margin: 20px 0;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }}
+                .tm-section {{
+                    background-color: #24303c;
+                    margin: 20px 0;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }}
 
-    .form-group {{
-        margin-bottom: 15px;
-    }}
+                .form-group {{
+                    margin-bottom: 15px;
+                }}
 
-    .form-group a,
-    .form-group p {{
-        margin: 0;
-        font-size: 18px;
-        color: #ffffff;
-    }}
+                .form-group a,
+                .form-group p {{
+                    margin: 0;
+                    font-size: 18px;
+                    color: #ffffff;
+                }}
 
-    input[type='text'],
-    input[type='number'],
-    input[type='password'],
-    input[type='text']:focus,
-    input[type='number']:focus,
-    input[type='password']:focus {{
-        width: 100%;
-        padding: 10px;
-        margin-top: 5px;
-        margin-bottom: 5px;
-        border-radius: 4px;
-        border: 2px solid #449d44;
-        box-sizing: border-box;
-        background: #182d43;
-        color: #ffffff;
-    }}
+                input[type='text'],
+                input[type='number'],
+                input[type='password'],
+                input[type='text']:focus,
+                input[type='number']:focus,
+                input[type='password']:focus {{
+                    width: 100%;
+                    padding: 10px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                    border-radius: 4px;
+                    border: 2px solid #449d44;
+                    box-sizing: border-box;
+                    background: #182d43;
+                    color: #ffffff;
+                }}
 
-    input[type='text']:disabled,
-    input[type='number']:disabled {{
-        background-color: #182d43;
-        border: 2px solid #fa5454;
-    }}
+                input[type='text']:disabled,
+                input[type='number']:disabled {{
+                    background-color: #182d43;
+                    border: 2px solid #fa5454;
+                }}
 
-    input[type='submit'],
-    button {{
-        background-color: #1f53c5;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }}
+                input[type='submit'],
+                button {{
+                    background-color: #1f53c5;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 16px;
+                }}
 
-    input[type='submit']:hover,
-    button:hover {{
-        background-color: #1a4195;
-    }}
+                input[type='submit']:hover,
+                button:hover {{
+                    background-color: #1a4195;
+                }}
 
-    input[type='button']:hover {{
-        background-color: #286090;
-    }}
+                input[type='button']:hover {{
+                    background-color: #286090;
+                }}
 
-    .tm-form-element {{
-        display: flex;
-        flex-direction: column;
-    }}
+                .tm-form-element {{
+                    display: flex;
+                    flex-direction: column;
+                }}
 
-    .tm-search-form-row {{
-        margin-bottom: 20px;
-    }}
+                .tm-search-form-row {{
+                    margin-bottom: 20px;
+                }}
 
-    .tm-form-element-50 {{
-        flex-basis: 50%;
-    }}
+                .tm-form-element-50 {{
+                    flex-basis: 50%;
+                }}
 
-    .tm-form-element-100 {{
-        flex-basis: 100%;
-    }}
+                .tm-form-element-100 {{
+                    flex-basis: 100%;
+                }}
 
-    @media (max-width: 768px) {{
-        .form-group {{
-            width: 100%;
-        }}
+                @media (max-width: 768px) {{
+                    .form-group {{
+                        width: 100%;
+                    }}
 
-        .tm-form-element-50,
-        .tm-form-element-100 {{
-            flex-basis: 100%;
-        }}
-    }}
+                    .tm-form-element-50,
+                    .tm-form-element-100 {{
+                        flex-basis: 100%;
+                    }}
+                }}
 
-    /* Styles for the graph placeholder */
-    .graph-placeholder {{
-        width: 100%;
-        background: #ddd;
-        color: #333;
-        text-align: center;
-        padding: 50px 0;
-        margin-top: 20px;
-        border-radius: 8px;
-    }}
+                /* Styles for the graph placeholder */
+                .graph-placeholder {{
+                    width: 100%;
+                    background: #ddd;
+                    color: #333;
+                    text-align: center;
+                    padding: 50px 0;
+                    margin-top: 20px;
+                    border-radius: 8px;
+                }}
             ";
 
             // JS scripts
