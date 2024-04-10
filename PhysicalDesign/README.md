@@ -9,7 +9,7 @@ Within the `design` directory, you will find the SketchUp model files:
 
 These models are provided in both SketchUp format and STL (Stereolithography) format for 3D printing and rendering.
 
-<img src="./img/readme_box_design.png" alt="Box Design" width="400"/>
+<img src="./img/readme_box_design.png" alt="Box Design" width="600"/>
 
 *Note: The image above is a representation of the box design. To view the design in full detail, please access the SketchUp files in the `design` folder.*
 
@@ -35,8 +35,8 @@ graph LR
     v12[12V Current Transformer] --> C12[Clamp]
     v24[24V Current Transformer] --> C24[Clamp]
     
-    C12 --> R
+    C12 --> R2
     M[Meadow] --> R
     M[Meadow] --> R2
-    C24 --> R2
+    C24 --> R
 ```
