@@ -1,5 +1,7 @@
 ---
 import '@fontsource/dm-serif-display';
+import NavBar from '../components/NavBar.astro';
+import { ViewTransitions } from 'astro:transitions';
 
 interface Props {
 	title?: string;
@@ -16,8 +18,10 @@ const title = 'Temperature Warrior' + (Astro.props.title ? ` - ${Astro.props.tit
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+        <ViewTransitions />
 	</head>
 	<body class="bg-dark-primary text-light-primary">
+        <NavBar transition:persist/>
 		<slot />
 	</body>
 </html>
