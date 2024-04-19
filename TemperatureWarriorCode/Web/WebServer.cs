@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using YamlDotNet.Core.Tokens;
 using Meadow.Foundation.Graphics;
 using Meadow.Peripherals.Displays;
+using System.Collections.Specialized;
 
 namespace TemperatureWarriorCode.Web
 {
@@ -122,91 +123,38 @@ namespace TemperatureWarriorCode.Web
                         }
                         else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/setparams")
                         {
-
                             //Get parameters
-                            string url = req.RawUrl;
-                            if (!string.IsNullOrWhiteSpace(url))
+                            NameValueCollection queryParams = req.QueryString;
+                            if (queryParams["pass"] != null && queryParams["temp_max"] != null && queryParams["temp_min"] != null && queryParams["display_refresh"] != null && queryParams["refresh"] != null && queryParams["round_time"] != null)
                             {
+                                string pass_temp = queryParams["pass"];
+                                Data.temp_max = queryParams["temp_max"].Split(";");
+                                Data.temp_min = queryParams["temp_min"].Split(";");
+                                Data.display_refresh = Int16.Parse(queryParams["display_refresh"]);
+                                Data.refresh = Int16.Parse(queryParams["refresh"]);
+                                Data.round_time = queryParams["round_time"].Split(";");
 
-                                //Get text to the right from the interrogation mark
-                                string[] urlParts = url.Split('?');
-                                if (urlParts?.Length >= 1)
+                                if (string.Equals(pass, pass_temp))
                                 {
-
-                                    //The parametes are in the array first position
-                                    string[] parameters = urlParts[1].Split('&');
-                                    if (parameters?.Length >= 2)
+                                    ready = tempCheck(Data.temp_max, false) && tempCheck(Data.temp_min, true);
+                                    if (ready)
                                     {
-
-                                        // Param 5 => to pass
-                                        string[] pass_parts = parameters[5].Split('=');
-                                        string pass_temp = pass_parts[1];
-
-                                        if (string.Equals(pass, pass_temp))
-                                        {
-
-                                            // Param 0 => Temp max
-                                            string[] temp_max_parts = parameters[0].Split('=');
-                                            //string[] temp_max_final = temp_max_parts[1].Split(";");
-                                            //Data.temp_max = new string[] { temp_max_parts[1].Split(";") };
-                                            Data.temp_max = temp_max_parts[1].Split(";");
-
-
-                                            // Param 1 => Temp min
-                                            string[] temp_min_parts = parameters[1].Split('=');
-                                            //Data.temp_min = new string[] { temp_min_parts[1] };
-                                            //Data.temp_min = new string[] { "12", "12" };
-                                            Data.temp_min = temp_min_parts[1].Split(";");
-
-                                            // Param 2 => to display_refresh
-                                            string[] display_refresh_parts = parameters[2].Split('=');
-                                            Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
-                                            //Data.display_refresh = 1000;
-
-                                            // Param 3 => to refresh
-                                            string[] refresh_parts = parameters[3].Split('=');
-                                            Data.refresh = Int16.Parse(refresh_parts[1]);
-                                            //Data.refresh = 1000;
-
-
-
-                                            // Param 4 => to round_time
-                                            string[] round_time_parts = parameters[4].Split('=');
-                                            //Data.round_time = new string[] { round_time_parts[1] };
-                                            //Data.round_time = new string[] { "5", "15" };
-                                            Data.round_time = round_time_parts[1].Split(";");
-
-                                            ready = tempCheck(Data.temp_max, false) && tempCheck(Data.temp_min, true);
-                                            if (ready)
-                                            {
-                                                message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"Los parametros se han cambiado satisfactoriamente. Todo preparado.\"}}";
-                                                resp.StatusCode = 400;
-                                                resp.StatusDescription = "Bad Request";
-                                            }
-                                            else
-                                            {
-                                                message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"El rango de temperatura maximo es entre 30 y 12 grados C.\"}}";
-                                                resp.StatusCode = 400;
-                                                resp.StatusDescription = "Bad Request";
-                                            }
-                                        }
-                                        else
-                                        {
-                                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"La contrasena es incorrecta.\"}}";
-                                            resp.StatusCode = 401;
-                                            resp.StatusDescription = "Unauthorized";
-                                        }
+                                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"Los parametros se han cambiado satisfactoriamente. Todo preparado.\"}}";
+                                        resp.StatusCode = 200;
+                                        resp.StatusDescription = "OK";
                                     }
                                     else
                                     {
+                                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"El rango de temperatura maximo es entre 30 y 12 grados C.\"}}";
                                         resp.StatusCode = 400;
                                         resp.StatusDescription = "Bad Request";
                                     }
                                 }
                                 else
                                 {
-                                    resp.StatusCode = 400;
-                                    resp.StatusDescription = "Bad Request";
+                                    message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"La contrasena es incorrecta.\"}}";
+                                    resp.StatusCode = 401;
+                                    resp.StatusDescription = "Unauthorized";
                                 }
                             }
                             else
@@ -214,7 +162,6 @@ namespace TemperatureWarriorCode.Web
                                 resp.StatusCode = 400;
                                 resp.StatusDescription = "Bad Request";
                             }
-
                         }
                         else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/start")
                         {
