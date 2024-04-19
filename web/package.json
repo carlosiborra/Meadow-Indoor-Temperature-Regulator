@@ -7,11 +7,15 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "serve": "astro check && astro build && astro preview"
   },
   "dependencies": {
-    "astro": "^4.6.1",
     "@astrojs/check": "^0.5.10",
+    "@astrojs/tailwind": "^5.1.0",
+    "@fontsource/dm-serif-display": "^5.0.19",
+    "astro": "^4.6.1",
+    "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"
   }
 }
