@@ -110,15 +110,17 @@ namespace TemperatureWarriorCode.Web
                     Console.WriteLine();
 
 
-                    // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
-                    if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown")
+                    try
                     {
-                        Console.WriteLine("Shutdown requested");
-                        _runServer = false;
-                    }
-
-                    try {
-                        if (req.Url.AbsolutePath == "/setparams")
+                        // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
+                        if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown")
+                        {
+                            Console.WriteLine("Shutdown requested");
+                            _runServer = false;
+                            resp.StatusCode = 200;
+                            resp.StatusDescription = "OK";
+                        }
+                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/setparams")
                         {
 
                             //Get parameters
@@ -174,27 +176,47 @@ namespace TemperatureWarriorCode.Web
                                             //Data.round_time = new string[] { "5", "15" };
                                             Data.round_time = round_time_parts[1].Split(";");
 
-                                            if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true))
+                                            ready = tempCheck(Data.temp_max, false) && tempCheck(Data.temp_min, true);
+                                            if (ready)
                                             {
-                                                message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
+                                                message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"Los parametros se han cambiado satisfactoriamente. Todo preparado.\"}}";
+                                                resp.StatusCode = 400;
+                                                resp.StatusDescription = "Bad Request";
                                             }
-
                                             else
                                             {
-                                                message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
-                                                ready = true;
+                                                message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"El rango de temperatura maximo es entre 30 y 12 grados C.\"}}";
+                                                resp.StatusCode = 400;
+                                                resp.StatusDescription = "Bad Request";
                                             }
                                         }
                                         else
                                         {
-                                            message = "La contrase&ntilde;a es incorrecta.";
+                                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"mensaje\":\"La contrasena es incorrecta.\"}}";
+                                            resp.StatusCode = 401;
+                                            resp.StatusDescription = "Unauthorized";
                                         }
                                     }
+                                    else
+                                    {
+                                        resp.StatusCode = 400;
+                                        resp.StatusDescription = "Bad Request";
+                                    }
                                 }
+                                else
+                                {
+                                    resp.StatusCode = 400;
+                                    resp.StatusDescription = "Bad Request";
+                                }
+                            }
+                            else
+                            {
+                                resp.StatusCode = 400;
+                                resp.StatusDescription = "Bad Request";
                             }
 
                         }
-                        else if (req.Url.AbsolutePath == "/start")
+                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/start")
                         {
 
                             // Start the round
@@ -208,28 +230,42 @@ namespace TemperatureWarriorCode.Web
                             }
                             ready = false;
 
-                            message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
+                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}";
+                            resp.StatusCode = 200;
+                            resp.StatusDescription = "OK";
                         }
-                        else if (req.Url.AbsolutePath == "/temp")
+                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/temp")
                         {
-                            message = $"La temperatura actual es {Data.temp_act}";
+                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"temperatura\":{Data.temp_act}}}";
+                            resp.StatusCode = 200;
+                            resp.StatusDescription = "OK";
                         }
-                        // Write the response info
-                        string disableSubmit = !_runServer ? "disabled" : "";
-                        byte[] data = Encoding.UTF8.GetBytes(writeHTML(message, _pageViews, disableSubmit));
-                        resp.ContentType = "text/html";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        resp.ContentLength64 = data.LongLength;
+                        else
+                        {
+                            resp.StatusCode = 404;
+                            resp.StatusDescription = "Not Found";
+                        }
+                        if (message != "")
+                        {
+                            // Write the response info
+                            byte[] data = Encoding.UTF8.GetBytes(message);
+                            resp.ContentType = "application/json";
+                            resp.ContentEncoding = Encoding.UTF8;
+                            resp.ContentLength64 = data.LongLength;
 
-                        // Write out to the response stream (asynchronously), then close it
-                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                        resp.Close();
+                            // Write out to the response stream (asynchronously), then close it
+                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                        }
+                        message = "";
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
-                        resp.Close();
+                        resp.StatusCode = 500;
+                        resp.StatusDescription = "Internal Server Error";
                     }
+
+                    resp.Close();
                 }
 
             });
