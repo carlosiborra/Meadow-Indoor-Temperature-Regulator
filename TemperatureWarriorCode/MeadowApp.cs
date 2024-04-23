@@ -38,6 +38,8 @@ namespace TemperatureWarriorCode {
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
+
+                // TODO Modify this value according to the needs of the project
                 sensor.StartUpdating(TimeSpan.FromSeconds(2)); // 2 secs are very important!!!!
 
                 // TODO Local Network configuration (uncomment when needed)
@@ -74,7 +76,7 @@ namespace TemperatureWarriorCode {
         //TW Combat Round
         public static void StartRound() {
 
-            Stopwatch timer = Stopwatch.StartNew();
+            Stopwatch timer = Stopwatch.StartNew(); 
             timer.Start();
 
             //Value to control the time for heating and cooling
