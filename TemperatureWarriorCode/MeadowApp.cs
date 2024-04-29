@@ -40,7 +40,7 @@ namespace TemperatureWarriorCode {
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
 
                 // TODO Modify this value according to the needs of the project
-                sensor.StartUpdating(TimeSpan.FromSeconds(2)); // 2 secs are very important!!!!
+                sensor.StartUpdating(TimeSpan.FromSeconds(2)); // Start updating the temperature every 2 seconds. In our case, we need to decide the time to update the temperature. We could use a lower value to get more accurate results and obtain an average of the temperature deleting outliers.
 
                 // TODO Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -102,7 +102,6 @@ namespace TemperatureWarriorCode {
             }
             
             //Initialization of timecontroller with the ranges
-            timeController.DEBUG_MODE = false;
             success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
             Console.WriteLine(success);
 
@@ -110,10 +109,22 @@ namespace TemperatureWarriorCode {
             Thread t = new Thread(Timer);
             t.Start();
 
-            Stopwatch regTempTimer = new Stopwatch();
-            timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
-            regTempTimer.Start();
+            //Stopwatch regTempTimer = new Stopwatch();
 
+            // TODO: Thread que obtenga la temperatura actual según el tiempo de refresco (medidas continuas por el sensor), y tenga una logica que escoja un valor de temperatura basandose en los que ha medido anteriormente. Por ejemplo, descartando los outliers y calculando la media de los valores restantes. DETERMINAR CUALES SON OUTLIERS!
+                    // Es decir, cada valor de tiempo de cadencia (especificado por el profesor), se escogerá un valor de temperatura (basándose en las mediciones que se han realizado en intervalos de tiempo más pequeños) que será el que se mostrará en las gráficas.
+            // TODO: Thread que obtenga los valores de los tiempos que se ha estado en el rango especificado y los muestre en la interfaz gráfica.
+            timeController.StartOperation(); // Start the PID controller
+            
+            t.Abort();
+
+            //regTempTimer.Start();
+
+            
+
+
+            """
+            ESTE CODIGO NOS LO DAN, LO DEJO DE MOMENTO POR SI NOS ES UTIL EN EL FUTURO
             Console.WriteLine("STARTING");
 
             //THE TW START WORKING
@@ -138,6 +149,7 @@ namespace TemperatureWarriorCode {
             Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
             Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
         }
+        """ 
 
         //Round Timer
         private static void Timer() {
@@ -152,6 +164,7 @@ namespace TemperatureWarriorCode {
             }
             Data.is_working = false;
         }
+        
 
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e) {
