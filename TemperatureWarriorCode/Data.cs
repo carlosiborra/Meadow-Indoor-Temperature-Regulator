@@ -29,5 +29,10 @@ namespace TemperatureWarriorCode {
             Color.FromHex("#269926"),
             Color.FromHex("#008500")
         };
+
+        //TEMPERATURE RANGES
+        public static double max_allowed_temp = 55.0; // In ºC
+        public static double max_temp_comp = 30.0; // In ºC
+        public static double min_temp_comp = 12.0; // In ºC
     }
 }
