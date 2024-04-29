@@ -42,16 +42,16 @@ class Usage
 
             while (stopwatch.Elapsed.TotalSeconds < duracion_rangos[i]) // While the elapsed time is less than the duration of the specific range (in seconds)
             {
-                double data_temp_act = double.parse(Data.temp_act);
+                double data_temp_act = double.Parse(Data.temp_act);
                 if (data_temp_act < Data.max_allowed_temp && 
                     (data_temp_act < Data.max_temp_comp && data_temp_act > Data.min_temp_comp))
                 {
                     // Obtaining the current temperature. Adapt this funcion to the one used in the project
-                    double actualTemperature = Data.temp_act;
+                    double actualTemperature = double.Parse(Data.temp_act);
                     // Compute the PID controller output based on the current temperature and the target temperature
                     double output = controller.Compute(actualTemperature, temperatura_objetivo);
                     // Applying the PID controller output to the system. Adapt this function to the one used in the project
-                    aplicarSalidaControlador(output);
+                    //aplicarSalidaControlador(output);
 
                 }
             }
