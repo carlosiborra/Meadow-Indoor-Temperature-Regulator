@@ -11,7 +11,7 @@ const title = 'Temperature Warrior' + (Astro.props.title ? ` - ${Astro.props.tit
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-dark-primary text-light-primary">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -20,7 +20,7 @@ const title = 'Temperature Warrior' + (Astro.props.title ? ` - ${Astro.props.tit
 		<title>{title}</title>
         <ViewTransitions />
 	</head>
-	<body class="bg-dark-primary text-light-primary">
+	<body>
         <NavBar transition:persist/>
 		<slot />
 	</body>

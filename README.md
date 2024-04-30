@@ -51,3 +51,13 @@ To deploy and run a project on your Meadow board, follow these instructions:
    Select the Meadow project within VS Code, and press `F5` to build and deploy the project to your Meadow board.
 
 > **Note**: It's crucial to open the project by double-clicking `TemperatureWarriorCode.sln`. Opening the project in any other manner may result in it not functioning correctly.
+
+
+## Api endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| **GET** | /temp | Returns the current temperature |
+| **GET** | /setparams | Query Params *pass*, *temp_max*, *temp_min*, *display_refresh*, *refresh*, *round_time*  |
+| **GET** | /start | Starts the round |
+| **POST** | /shutdown | Shutdown the device |
