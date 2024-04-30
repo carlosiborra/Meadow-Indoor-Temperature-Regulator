@@ -59,8 +59,9 @@ public class TimeController
                 double output = pidController.Compute(currentTemperature, targetTemperature); // Compute the PID controller output based on the current temperature and the target temperature
                 ApplyControllerOutput(output); // Applying the PID controller output to the system. TODO: ADAPT THIS FUNCTION TO THE ONE USED IN THE PROJECT
             }
+            stopwatch.Stop();
+            stopwatch.Reset();
         }
-        // Detener el cronómetro
         stopwatch.Stop();
     }
 
