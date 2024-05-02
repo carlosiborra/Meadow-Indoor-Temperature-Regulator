@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Meadow.Foundation.Relays;
+using PIDController;
 
 
 public class RoundController
@@ -8,7 +9,7 @@ public class RoundController
     private TemperatureRange[] temperatureRanges;
     private int totalTime;
     private int refreshRate;
-    private simplePIDController pidController;
+    private PIDController pidController;
 
     private Relay relayBombilla;
     private Relay relayPlaca;
