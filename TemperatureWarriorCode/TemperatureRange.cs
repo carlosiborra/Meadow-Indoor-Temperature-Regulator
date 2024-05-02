@@ -1,3 +1,5 @@
+using System;
+
 public class TemperatureRange
 {
     public double Min { get; set; }
