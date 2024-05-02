@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using TemperatureWarriorCode.Web;
 using NETDuinoWar;
+using Meadow.Foundation.Relays;
 
 
 namespace TemperatureWarriorCode {
@@ -27,6 +28,10 @@ namespace TemperatureWarriorCode {
         public static int total_time = 0;
         public static int total_time_in_range = 0;
         public static int total_time_out_of_range = 0;
+
+        // Relays
+        public static Relay relayBombilla;
+        public static Relay relayPlaca;
 
         public int count = 0;
 
@@ -80,11 +85,15 @@ namespace TemperatureWarriorCode {
             timer.Start();
 
             //Value to control the time for heating and cooling
-            //First iteration is 100 for the time spend creating timecontroller and thread
+            //First iteration is 100 for the time spend creating RoundController and thread
             int sleep_time = 20;
 
-            //Initialization of time controller
-            TimeController timeController = new TimeController();
+            // Initialization of time controller
+            RoundController RoundController = new RoundController();
+
+            // Relays initialization
+            relayBombilla = InstantiateRelay(Device.Pins.D02, initialValue: false);
+            relayPlaca = InstantiateRelay(Device.Pins.D03, initialValue: false);
 
             //Configuration of differents ranges
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.round_time.Length];
@@ -92,20 +101,20 @@ namespace TemperatureWarriorCode {
             //Range configurations
             bool success;
             string error_message = null;
-            Data.is_working = true;
+            
 
-            //define ranges
+            // Define temperature ranges for the round and duration for each range
             for (int i = 0; i < Data.temp_min.Length; i++) {
                 Console.WriteLine(Data.temp_max[i]);
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
             
-            //Initialization of timecontroller with the ranges
-            success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
+            //Initialization of RoundController with the ranges defined
+            success = RoundController.Configure(temperatureRanges, total_time * 1000, Data.refresh, relayBombilla, relayPlaca, out error_message);
             Console.WriteLine(success);
 
-            //Initialization of timer
+            //Initialization of timer (thread that controls the time of the round)
             Thread t = new Thread(Timer);
             t.Start();
 
@@ -114,42 +123,53 @@ namespace TemperatureWarriorCode {
             // TODO: Thread que obtenga la temperatura actual según el tiempo de refresco (medidas continuas por el sensor), y tenga una logica que escoja un valor de temperatura basandose en los que ha medido anteriormente. Por ejemplo, descartando los outliers y calculando la media de los valores restantes. DETERMINAR CUALES SON OUTLIERS!
                     // Es decir, cada valor de tiempo de cadencia (especificado por el profesor), se escogerá un valor de temperatura (basándose en las mediciones que se han realizado en intervalos de tiempo más pequeños) que será el que se mostrará en las gráficas.
             // TODO: Thread que obtenga los valores de los tiempos que se ha estado en el rango especificado y los muestre en la interfaz gráfica.
-            timeController.StartOperation(); // Start the PID controller
+            RoundController.StartOperation(); // Start the round operation (PID controller for each temperature range)
             
             t.Abort();
 
             //regTempTimer.Start();
 
+        }
+
             
 
 
-            """
-            ESTE CODIGO NOS LO DAN, LO DEJO DE MOMENTO POR SI NOS ES UTIL EN EL FUTURO
-            Console.WriteLine("STARTING");
+        """
+        ESTE CODIGO NOS LO DAN, LO DEJO DE MOMENTO POR SI NOS ES UTIL EN EL FUTURO
+        Console.WriteLine("STARTING");
 
-            //THE TW START WORKING
-            while (Data.is_working) {
+        //THE TW START WORKING
+        while (Data.is_working) {
 
-                //This is the time refresh we did not do before
-                Thread.Sleep(Data.refresh - sleep_time);
+            //This is the time refresh we did not do before
+            Thread.Sleep(Data.refresh - sleep_time);
 
-                //Temperature registration
-                Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
-                regTempTimer.Restart();
+            //Temperature registration
+            Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
+            RoundController.RegisterTemperature(double.Parse(Data.temp_act));
+            regTempTimer.Restart();
 
-            }
-            Console.WriteLine("Round Finish");
-            t.Abort();
-
-            total_time_in_range += timeController.TimeInRangeInMilliseconds;
-            total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
-            Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
-
-            Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-            Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
         }
+        Console.WriteLine("Round Finish");
+        t.Abort();
+
+        total_time_in_range += RoundController.TimeInRangeInMilliseconds;
+        total_time_out_of_range += RoundController.TimeOutOfRangeInMilliseconds;
+        Data.time_in_range_temp = (RoundController.TimeInRangeInMilliseconds / 1000);
+
+        Console.WriteLine("Tiempo dentro del rango " + (((double)RoundController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
+        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
         """ 
+
+        #region Relay
+        Relay InstantiateRelay(IPin thePin, bool initialValue)
+        {
+            Relay theRelay = new Relay(Device.CreateDigitalOutputPort(thePin));
+            theRelay.IsOn = initialValue;
+            return theRelay;
+        }
+        #endregion
+
 
         //Round Timer
         private static void Timer() {
