@@ -1,4 +1,4 @@
-﻿using Meadow;
+using Meadow;
 using Meadow.Foundation;
 using Meadow.Foundation.Sensors.Temperature;
 using Meadow.Devices;
@@ -134,7 +134,7 @@ namespace TemperatureWarriorCode {
             
 
 
-        """
+        /*
         ESTE CODIGO NOS LO DAN, LO DEJO DE MOMENTO POR SI NOS ES UTIL EN EL FUTURO
         Console.WriteLine("STARTING");
 
@@ -159,7 +159,7 @@ namespace TemperatureWarriorCode {
 
         Console.WriteLine("Tiempo dentro del rango " + (((double)RoundController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
         Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
-        """ 
+        */ 
 
         #region Relay
         Relay InstantiateRelay(IPin thePin, bool initialValue)
