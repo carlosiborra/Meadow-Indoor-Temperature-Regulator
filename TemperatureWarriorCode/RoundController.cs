@@ -62,7 +62,7 @@ public class RoundController
             {
                 double currentTemperature = Data.temp_act; // Obtaining the current temperature.
                 double output = pidController.Compute(currentTemperature, targetTemperature); // Compute the PID controller output based on the current temperature and the target temperature
-                // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS TO THE NEEDSOF THE SYSTEM
+                // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
                 ControlarRelay(relayBombilla, relayPlaca, output, 50, 1000); // Applying the PID controller output to the system.
             }
             stopwatch.Stop();
