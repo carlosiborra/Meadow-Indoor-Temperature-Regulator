@@ -66,7 +66,7 @@ public class RoundController
                 double currentTemperature = Data.temp_act; // Obtaining the current temperature.
                 double output = pidController.Compute(currentTemperature, targetTemperature); // Compute the PID controller output based on the current temperature and the target temperature
                 // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
-                ControlarRelay(relayBombilla, relayPlaca, output, 50, 1000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)output, 50, 1000); // Applying the PID controller output to the system.
             }
             stopwatch.Stop();
             stopwatch.Reset();
@@ -74,15 +74,15 @@ public class RoundController
         stopwatch.Stop();
     }
 
-    private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreackpoint, int periodoTiempo)
+    private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
     {
         // Intensity BreackPoint es una variable que muestra en que rango deja de enfriar y empieza a calentar
-        if (intensidad >= 0 && intensidad <= intensityBreackpoint)
+        if (intensidad >= 0 && intensidad <= intensityBreakpoint)
         {
             // Código de enfriamiento
 
             // Calculamos el tiempo de encendido proporcional a la intensidad
-            int tiempoEncendido = intensidad * (100/intensityBreackpoint) * periodoTiempo / 100;
+            int tiempoEncendido = intensidad * (100/intensityBreakpoint) * periodoTiempo / 100;
             // Encendemos el relay de la placa de Peltier para enfriar y apagamos la bombilla
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
@@ -94,12 +94,12 @@ public class RoundController
             relayPlaca.IsOn = false;
             Thread.Sleep(tiempoApagado);
         }
-        else if (intensidad >= intensityBreackpoint && intensidad <= 100)
+        else if (intensidad >= intensityBreakpoint && intensidad <= 100)
         {
             // Código de calentamiento
 
             // Calculamos el tiempo de encendido proporcional a la intensidad
-            int tiempoEncendido = intensidad * (1-(100 / intensityBreackpoint)) * periodoTiempo / 100;
+            int tiempoEncendido = intensidad * (1-(100 / intensityBreakpoint)) * periodoTiempo / 100;
             // Encendemos el relay de la bombilla  y apagamos placa de Peltier
             relayBombilla.IsOn = false;
             relayPlaca.IsOn = true;
