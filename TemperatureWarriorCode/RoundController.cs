@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Meadow.Foundation.Relays;
 using System.Threading;
+using TemperatureWarriorCode;
 
 
 public class RoundController
@@ -63,7 +64,7 @@ public class RoundController
 
             while (stopwatch.Elapsed.TotalSeconds < temperatureRanges[i].Duration) // While the elapsed time is less than the duration of the specific range (in seconds)
             {
-                double currentTemperature = Data.temp_act; // Obtaining the current temperature.
+                double currentTemperature = Convert.ToDouble(Data.temp_act); // Obtaining the current temperature.
                 double output = pidController.Compute(currentTemperature, targetTemperature); // Compute the PID controller output based on the current temperature and the target temperature
                 // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
                 ControlarRelay(relayBombilla, relayPlaca, (int)output, 50, 1000); // Applying the PID controller output to the system.

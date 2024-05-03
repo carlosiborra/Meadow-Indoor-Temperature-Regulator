@@ -162,7 +162,7 @@ namespace TemperatureWarriorCode {
         */ 
 
         #region Relay
-        Relay InstantiateRelay(IPin thePin, bool initialValue)
+        private static Relay InstantiateRelay(IPin thePin, bool initialValue)
         {
             Relay theRelay = new Relay(Device.CreateDigitalOutputPort(thePin));
             theRelay.IsOn = initialValue;
