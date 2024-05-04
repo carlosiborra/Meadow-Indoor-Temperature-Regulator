@@ -79,7 +79,7 @@ public class RoundController
             while (stopwatch.Elapsed.TotalSeconds < temperatureRanges[i].Duration) // While the elapsed time is less than the duration of the specific range (in seconds)
             {
                 // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
-                ControlarRelay(relayBombilla, relayPlaca, (int)output, 50, 1000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 50, 1000); // Applying the PID controller output to the system.
             }
             stopwatch.Stop();
             stopwatch.Reset();
@@ -121,7 +121,7 @@ public class RoundController
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
-            Thread.sleep(tiempoApagado);
+            Thread.Sleep(tiempoApagado);
         }
         else
         {
