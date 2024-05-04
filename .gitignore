@@ -4,9 +4,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# Other controllers
-PIDController/others/*
-PIDController/others 
 
 # User-specific files
 *.rsuser
