@@ -1,4 +1,5 @@
 using System;
+using TemperatureWarriorCode;
 public class PIDController
 {
     private double kp; // Gain value of the proportional term
@@ -34,8 +35,9 @@ public class PIDController
     }
 
     // Method to compute the PID control output based on the error
-    public double Compute(double actualTemperature, double desiredTemperature)
+    public double Compute(double desiredTemperature)
     {
+        double actualTemperature = Convert.ToDouble(Data.temp_act);
         double error = desiredTemperature - actualTemperature; // Error between the desired and actual temperature
 
         double currentTime = GetCurrentTime();
@@ -48,9 +50,8 @@ public class PIDController
         previousError = error;
 
         // Compute the PID output
-        double output = (kp * proportional) + (ki * integral) + (kd * derivative);
+        Data.output = (kp * proportional) + (ki * integral) + (kd * derivative);
         
-        return output;
     }
 
     // Properties to get and set the PID gains

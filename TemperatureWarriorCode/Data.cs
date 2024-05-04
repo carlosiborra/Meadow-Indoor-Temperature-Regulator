@@ -14,7 +14,7 @@ namespace TemperatureWarriorCode {
         public static int display_refresh = 100; // In ms
         public static int refresh = 100; // In ms
         public static String[] round_time = { "60" }; // in s
-
+        public static double output;
         //START ROUND VARIABLES
         public static bool is_working = false;
         public static string temp_act = "0"; // In ºC
@@ -29,10 +29,5 @@ namespace TemperatureWarriorCode {
             Color.FromHex("#269926"),
             Color.FromHex("#008500")
         };
-
-        //TEMPERATURE RANGES
-        public static double max_allowed_temp = 55.0; // In ºC
-        public static double max_temp_comp = 30.0; // In ºC
-        public static double min_temp_comp = 12.0; // In ºC
     }
 }

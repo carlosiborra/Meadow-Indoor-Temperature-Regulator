@@ -61,18 +61,30 @@ public class RoundController
         {
             double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             stopwatch.Start(); // Start the stopwatch
+             // Crear un nuevo hilo y ejecutar la función Compute en ese hilo
+            Thread thread = new Thread(() =>
+            {
+                while (true)
+                {
+                    // Calcular la salida del control PID
+                    pidController.Compute(targetTemperature);
 
+                    // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura
+                    Thread.Sleep();
+                }
+            });
+
+            // Iniciar el hilo
+            thread.Start();
             while (stopwatch.Elapsed.TotalSeconds < temperatureRanges[i].Duration) // While the elapsed time is less than the duration of the specific range (in seconds)
             {
-                double currentTemperature = Convert.ToDouble(Data.temp_act); // Obtaining the current temperature.
-                double output = pidController.Compute(currentTemperature, targetTemperature); // Compute the PID controller output based on the current temperature and the target temperature
                 // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
                 ControlarRelay(relayBombilla, relayPlaca, (int)output, 50, 1000); // Applying the PID controller output to the system.
             }
             stopwatch.Stop();
             stopwatch.Reset();
+            thread.join();
         }
-        stopwatch.Stop();
     }
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
@@ -88,12 +100,12 @@ public class RoundController
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             // Esperar el tiempo de encendido
-            Thread.Sleep(tiempoEncendido);
+            time.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
-            Thread.Sleep(tiempoApagado);
+            time.Sleep(tiempoApagado);
         }
         else if (intensidad >= intensityBreakpoint && intensidad <= 100)
         {
@@ -105,12 +117,12 @@ public class RoundController
             relayBombilla.IsOn = false;
             relayPlaca.IsOn = true;
             // Esperar el tiempo de encendido
-            Thread.Sleep(tiempoEncendido);
+            time.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
-            Thread.Sleep(tiempoApagado);
+            time.Sleep(tiempoApagado);
         }
         else
         {
