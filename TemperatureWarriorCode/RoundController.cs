@@ -100,12 +100,12 @@ public class RoundController
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             // Esperar el tiempo de encendido
-            time.Sleep(tiempoEncendido);
+            Thread.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
-            time.Sleep(tiempoApagado);
+            Thread.Sleep(tiempoApagado);
         }
         else if (intensidad >= intensityBreakpoint && intensidad <= 100)
         {
@@ -117,12 +117,12 @@ public class RoundController
             relayBombilla.IsOn = false;
             relayPlaca.IsOn = true;
             // Esperar el tiempo de encendido
-            time.Sleep(tiempoEncendido);
+            Thread.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
-            time.Sleep(tiempoApagado);
+            Thread.sleep(tiempoApagado);
         }
         else
         {
