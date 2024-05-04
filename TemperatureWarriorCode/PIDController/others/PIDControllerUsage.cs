@@ -49,7 +49,7 @@ class Usage
                     // Obtaining the current temperature. Adapt this funcion to the one used in the project
                     double actualTemperature = double.Parse(Data.temp_act);
                     // Compute the PID controller output based on the current temperature and the target temperature
-                    double output = controller.Compute(actualTemperature, temperatura_objetivo);
+                    double output = controller.Compute(temperatura_objetivo);
                     // Applying the PID controller output to the system. Adapt this function to the one used in the project
                     //aplicarSalidaControlador(output);
 
