@@ -70,7 +70,7 @@ public class RoundController
                     pidController.Compute(targetTemperature);
 
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura
-                    Thread.Sleep();
+                    Thread.Sleep(10);
                 }
             });
 
@@ -83,7 +83,6 @@ public class RoundController
             }
             stopwatch.Stop();
             stopwatch.Reset();
-            thread.join();
         }
     }
 
