@@ -35,7 +35,7 @@ public class PIDController
     }
 
     // Method to compute the PID control output based on the error
-    public double Compute(double desiredTemperature)
+    public void Compute(double desiredTemperature)
     {
         double actualTemperature = Convert.ToDouble(Data.temp_act);
         double error = desiredTemperature - actualTemperature; // Error between the desired and actual temperature
