@@ -77,6 +77,7 @@ namespace TemperatureWarriorCode {
                 count = count + 1;
             }
         }
+        
 
         //TW Combat Round
         public static void StartRound() {
@@ -88,8 +89,11 @@ namespace TemperatureWarriorCode {
             //First iteration is 100 for the time spend creating RoundController and thread
             int sleep_time = 20;
 
-            // Initialization of time controller
+            // Initialization of round controller
             RoundController RoundController = new RoundController();
+
+            //Initialization of time controller
+            // TimeController timeController = new TimeController();
 
             // Relays initialization
             relayBombilla = InstantiateRelay(Device.Pins.D02, initialValue: false);
@@ -101,18 +105,17 @@ namespace TemperatureWarriorCode {
             //Range configurations
             bool success;
             string error_message = null;
-            
 
             // Define temperature ranges for the round and duration for each range
             for (int i = 0; i < Data.temp_min.Length; i++) {
-                Console.WriteLine(Data.temp_max[i]);
+                Console.WriteLine("Rango de tiempo ", i, "Temp_max: ", Data.temp_max[i], "Temp_min: ", Data.temp_min[i], "Round_time: ", Data.round_time[i]);
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
             
             //Initialization of RoundController with the ranges defined
             success = RoundController.Configure(temperatureRanges, total_time * 1000, Data.refresh, relayBombilla, relayPlaca, out error_message);
-            Console.WriteLine(success);
+            Console.WriteLine("Round controller configured - status: ", success);
 
             //Initialization of timer (thread that controls the time of the round)
             Thread t = new Thread(Timer);

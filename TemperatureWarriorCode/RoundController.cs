@@ -48,9 +48,14 @@ public class RoundController
     }
 
     public void StartOperation()
-    {
+    {   
+        Console.WriteLine("Starting the operations (PID and relayController)...");
+        // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
+        double kp = 0.8;
+        double ki = 0.2;
+        double kd = 0.001;
         // Create a PID controller with the specified gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
-        pidController = new PIDController(0.8, 0.2, 0.001);
+        pidController = new PIDController(kp, ki, kd);
 
         pidController.Reset(); // Reset the PID controller
 
@@ -61,24 +66,29 @@ public class RoundController
         {
             double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             stopwatch.Start(); // Start the stopwatch
-             // Crear un nuevo hilo y ejecutar la función Compute en ese hilo
+
+             // Se lanza un hilo que esté continuamente calculando la salida del control PID
             Thread thread = new Thread(() =>
             {
                 while (true)
                 {
                     // Calcular la salida del control PID
                     pidController.Compute(targetTemperature);
-
-                    // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura
+                    // Obtener la salida del control PID
+                    int output = (int)Data.output;
+                    Console.WriteLine("PID Output: " + output);
+                    // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
+                    // TODO - Este tiempo debe ser ajustado según la frecuencia de actualización del sensor.
                     Thread.Sleep(1000);
                 }
             });
-
-            // Iniciar el hilo
+            // Iniciamos el hilo de cálculo del control PID
             thread.Start();
+
+            // Se activa / desactiva el relay de la bombilla y la placa de Peltier según la salida del control PID
             while (stopwatch.Elapsed.TotalSeconds < temperatureRanges[i].Duration) // While the elapsed time is less than the duration of the specific range (in seconds)
             {
-                // MAYBE THIS FUNCTION SHOULD BE A THREAD. ADAPT THE PARAMETERS ACCORDING TO THE NEEDS OF THE SYSTEM
+                // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.
                 ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 50, 1000); // Applying the PID controller output to the system.
             }
             stopwatch.Stop();
@@ -92,35 +102,39 @@ public class RoundController
         if (intensidad >= 0 && intensidad <= intensityBreakpoint)
         {
             // Código de enfriamiento
-
+            Console.WriteLine("Enfriando... Encendiendo el relay de la placa Peltier y apagando el de la bombilla.");
             // Calculamos el tiempo de encendido proporcional a la intensidad
             int tiempoEncendido = intensidad * (100/intensityBreakpoint) * periodoTiempo / 100;
             // Encendemos el relay de la placa de Peltier para enfriar y apagamos la bombilla
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
+            Console.WriteLine("Tiempo de encendido: " + tiempoEncendido);
             // Esperar el tiempo de encendido
             Thread.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
             relayPlaca.IsOn = false;
+            Console.WriteLine("Tiempo de apagado: " + tiempoApagado);
             Thread.Sleep(tiempoApagado);
         }
         else if (intensidad >= intensityBreakpoint && intensidad <= 100)
         {
             // Código de calentamiento
-
+            Console.WriteLine("Calentando... Encendiendo el relay de la bombilla y apagando el de la placa Peltier.");
             // Calculamos el tiempo de encendido proporcional a la intensidad
             int tiempoEncendido = intensidad * (1-(100 / intensityBreakpoint)) * periodoTiempo / 100;
-            // Encendemos el relay de la bombilla  y apagamos placa de Peltier
-            relayBombilla.IsOn = false;
-            relayPlaca.IsOn = true;
+            // Encendemos el relay de la bombilla y apagamos placa de Peltier
+            relayBombilla.IsOn = true;
+            relayPlaca.IsOn = false;
+            Console.WriteLine("Tiempo de encendido: " + tiempoEncendido);
             // Esperar el tiempo de encendido
             Thread.Sleep(tiempoEncendido);
 
             int tiempoApagado = periodoTiempo - tiempoEncendido;
             // Apagar el relay el tiempo proporcional de apagado
-            relayPlaca.IsOn = false;
+            relayBombilla.IsOn = false;
+            Console.WriteLine("Tiempo de apagado: " + tiempoApagado);
             Thread.Sleep(tiempoApagado);
         }
         else
