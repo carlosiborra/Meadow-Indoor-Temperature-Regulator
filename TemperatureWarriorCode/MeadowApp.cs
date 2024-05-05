@@ -1,4 +1,4 @@
-using Meadow;
+﻿using Meadow;
 using Meadow.Foundation;
 using Meadow.Foundation.Sensors.Temperature;
 using Meadow.Devices;
@@ -122,7 +122,6 @@ namespace TemperatureWarriorCode {
 
             // TODO: Thread que obtenga la temperatura actual según el tiempo de refresco (medidas continuas por el sensor), y tenga una logica que escoja un valor de temperatura basandose en los que ha medido anteriormente. Por ejemplo, descartando los outliers y calculando la media de los valores restantes. DETERMINAR CUALES SON OUTLIERS!
                     // Es decir, cada valor de tiempo de cadencia (especificado por el profesor), se escogerá un valor de temperatura (basándose en las mediciones que se han realizado en intervalos de tiempo más pequeños) que será el que se mostrará en las gráficas.
-            // TODO: Thread que obtenga los valores de los tiempos que se ha estado en el rango especificado y los muestre en la interfaz gráfica.
             RoundController.StartOperation(); // Start the round operation (PID controller for each temperature range)
             
             t.Abort();
