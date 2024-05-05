@@ -48,7 +48,7 @@ public class RoundController
     }
 
     public void StartOperation()
-    {   
+    {
         Console.WriteLine("Starting the operations (PID and relayController)...");
         // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
         double kp = 0.8;
@@ -67,7 +67,7 @@ public class RoundController
             double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             stopwatch.Start(); // Start the stopwatch
 
-             // Se lanza un hilo que esté continuamente calculando la salida del control PID
+            // Se lanza un hilo que esté continuamente calculando la salida del control PID
             Thread thread = new Thread(() =>
             {
                 while (true)
@@ -98,44 +98,32 @@ public class RoundController
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
     {
-        // Intensity BreackPoint es una variable que muestra en que rango deja de enfriar y empieza a calentar
-        if (intensidad >= 0 && intensidad <= intensityBreakpoint)
-        {
-            // Código de enfriamiento
-            Console.WriteLine("Enfriando... Encendiendo el relay de la placa Peltier y apagando el de la bombilla.");
-            // Calculamos el tiempo de encendido proporcional a la intensidad
-            int tiempoEncendido = intensidad * (100/intensityBreakpoint) * periodoTiempo / 100;
-            // Encendemos el relay de la placa de Peltier para enfriar y apagamos la bombilla
-            relayPlaca.IsOn = true;
-            relayBombilla.IsOn = false;
-            Console.WriteLine("Tiempo de encendido: " + tiempoEncendido);
-            // Esperar el tiempo de encendido
-            Thread.Sleep(tiempoEncendido);
+        Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
 
-            int tiempoApagado = periodoTiempo - tiempoEncendido;
-            // Apagar el relay el tiempo proporcional de apagado
-            relayPlaca.IsOn = false;
-            Console.WriteLine("Tiempo de apagado: " + tiempoApagado);
-            Thread.Sleep(tiempoApagado);
-        }
-        else if (intensidad >= intensityBreakpoint && intensidad <= 100)
+        if (intensidad >= 0 && intensidad <= 100)
         {
-            // Código de calentamiento
-            Console.WriteLine("Calentando... Encendiendo el relay de la bombilla y apagando el de la placa Peltier.");
-            // Calculamos el tiempo de encendido proporcional a la intensidad
-            int tiempoEncendido = intensidad * (1-(100 / intensityBreakpoint)) * periodoTiempo / 100;
-            // Encendemos el relay de la bombilla y apagamos placa de Peltier
-            relayBombilla.IsOn = true;
-            relayPlaca.IsOn = false;
-            Console.WriteLine("Tiempo de encendido: " + tiempoEncendido);
-            // Esperar el tiempo de encendido
-            Thread.Sleep(tiempoEncendido);
-
-            int tiempoApagado = periodoTiempo - tiempoEncendido;
-            // Apagar el relay el tiempo proporcional de apagado
-            relayBombilla.IsOn = false;
-            Console.WriteLine("Tiempo de apagado: " + tiempoApagado);
-            Thread.Sleep(tiempoApagado);
+            if (intensidad <= intensityBreakpoint)
+            {
+                // Código de enfriamiento
+                int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
+                relayPlaca.IsOn = true;
+                relayBombilla.IsOn = false;
+                Console.WriteLine("❄️ Enfriando: {0}", tiempoEncendido);
+                Thread.Sleep(tiempoEncendido);
+                //relayPlaca.IsOn = false;
+                Thread.Sleep(periodoTiempo - tiempoEncendido);
+            }
+            else
+            {
+                // Código de calentamiento
+                int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (100 - intensityBreakpoint) * periodoTiempo / 100;
+                relayPlaca.IsOn = false;
+                relayBombilla.IsOn = true;
+                Console.WriteLine("🔥 Calentando: {0}", tiempoEncendido);
+                Thread.Sleep(tiempoEncendido);
+                //relayBombilla.IsOn = false;
+                Thread.Sleep(periodoTiempo - tiempoEncendido);
+            }
         }
         else
         {
