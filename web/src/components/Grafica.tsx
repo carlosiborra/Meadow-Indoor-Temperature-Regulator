@@ -1,4 +1,4 @@
-import React from "react";
+import { dataStore } from "../stores/data_store";
 import {
     LineChart,
     Line,
@@ -8,6 +8,8 @@ import {
     Tooltip,
     Legend,
 } from "recharts";
+
+const data2 = dataStore.get();
 
 
 const data = [
@@ -112,13 +114,6 @@ const data = [
         timestamp: 0
     }
 ];
-
-const styles = `
-  g {
-    color: #FFF !important;
-  }
-
-`;
 
 export default function Grafica() {
     return (
