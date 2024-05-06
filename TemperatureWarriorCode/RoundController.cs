@@ -78,8 +78,7 @@ public class RoundController
                     int output = (int)Data.output;
                     Console.WriteLine("PID Output: " + output);
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
-                    // TODO - Este tiempo debe ser ajustado según la frecuencia de actualización del sensor.
-                    Thread.Sleep(1000);
+                    Thread.Sleep(Data.refresh);
                 }
             });
             // Iniciamos el hilo de cálculo del control PID
