@@ -1,5 +1,6 @@
 using System;
 using TemperatureWarriorCode;
+
 public class PIDController
 {
     private double kp; // Gain value of the proportional term
@@ -51,7 +52,9 @@ public class PIDController
 
         // Compute the PID output
         Data.output = (kp * proportional) + (ki * integral) + (kd * derivative);
-        
+
+        // Limit output to range [0, 100]
+        Data.output = Math.Max(0, Math.Min(100, Data.output));
     }
 
     // Properties to get and set the PID gains
