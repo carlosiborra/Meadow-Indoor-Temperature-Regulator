@@ -36,7 +36,7 @@ namespace TemperatureWarriorCode
         public static Relay relayPlaca;
 
         public int count = 0;
-
+        public bool start = true;
         public override async Task Run()
         {
             if (count == 0)
@@ -198,8 +198,19 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
-            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-            Console.WriteLine($"Temperature={Data.temp_act}");
+
+            var temp_new = Math.Round((Double)e.New.Celsius, 2);
+            //Check if the new temperature is an outlier
+            if (!start && ( temp_new < 0.75*Convert.ToDouble(Data.temp_act) ||temp_new > 1.25*Convert.ToDouble(Data.temp_act) ))
+            {
+                Console.WriteLine($"Temperature={Data.temp_act}");
+            }
+            else
+            {
+                Data.temp_act = temp_new.ToString();
+                start=false;
+                Console.WriteLine($"Temperature={Data.temp_act}");
+            }
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
