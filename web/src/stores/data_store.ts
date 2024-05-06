@@ -2,12 +2,13 @@ import { atom } from "nanostores";
 import type { Data } from "@/types/Data";
 
 const BASE_URL = import.meta.env.BACKEND_URL ?? 'http://localhost:3000'
-const FETCH_INTERVAL = import.meta.env.FETCH_INTERVAL ?? 2000
+export const FETCH_INTERVAL = import.meta.env.FETCH_INTERVAL ?? 5000
 
 export const dataStore = atom<Data[]>([])
 
-export function fetchData(): void {
-    let last_element: Data = dataStore.get().pop() ?? {
+export async function fetchData(): Promise<void> {
+    let data = dataStore.get()
+    let last_element: Data = {
         tmin: 12,
         tmax: 30,
         current_temp: 0,
@@ -16,22 +17,38 @@ export function fetchData(): void {
         round_duration: 0,
         timestamp: Date.now()
     }
+    if(data.length > 0){
+    last_element = data[data.length - 1]
+    }
+
     let current_temp = last_element.current_temp
 
-    setTimeout(async () => {
-        const resp = await fetch(`${BASE_URL}/temp`)
+    const controller = new AbortController();
+    const timeout = FETCH_INTERVAL / 2
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    const start = Date.now()
+    try{
+        const resp = await fetch(`${BASE_URL}/temp`, {
+            signal: controller.signal
+        });
         if (resp.status === 200) {
             const data = await resp.json()
             if (data.temperatura != null) {
                 current_temp = data.temperatura
             }
         }
-
-    }, FETCH_INTERVAL * 2 / 3)
+        clearTimeout(id);
+    } catch {
+        console.log(`Failed to fetch server. Elapsed ${Date.now()-start}s`)
+    }
 
     last_element.current_temp = current_temp
+    last_element.timestamp = Date.now()
 
-    dataStore.set([...dataStore.get(), last_element])
+    data.push(last_element)
+
+    dataStore.set(data)
 }
 
 export async function updateParams(
@@ -43,7 +60,7 @@ export async function updateParams(
         refresh_rate: number,
         round_duration: number
     }
-): Promise<void>{
+): Promise<void> {
     let element: Data = dataStore.get().pop() ?? {
         tmin: 12,
         tmax: 30,
@@ -53,8 +70,8 @@ export async function updateParams(
         round_duration: 0,
         timestamp: Date.now()
     }
-    element = {...element, ...params} satisfies Data
-    
+    element = { ...element, ...params } satisfies Data
+
     await fetch(`${BASE_URL}/setparams`, {
         method: 'POST',
         body: JSON.stringify({

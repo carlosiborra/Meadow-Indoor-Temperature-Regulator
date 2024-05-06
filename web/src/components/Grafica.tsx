@@ -1,4 +1,5 @@
-import { dataStore } from "../stores/data_store";
+import { useStore } from "@nanostores/react";
+import { FETCH_INTERVAL, dataStore, fetchData } from "@/stores/data_store";
 import {
     LineChart,
     Line,
@@ -8,11 +9,9 @@ import {
     Tooltip,
     Legend,
 } from "recharts";
+import { useEffect, useState } from "react";
 
-const data2 = dataStore.get();
-
-
-const data = [
+const _data = [
     {
         name: "t1",
         tmin: 12,
@@ -116,6 +115,25 @@ const data = [
 ];
 
 export default function Grafica() {
+    const [_data, setData] = useState(dataStore.get())
+    const [data, setProcessedData] = useState(dataStore.get())
+
+    useEffect(()=>{
+        setInterval(async ()=>{
+            await fetchData()
+            setData(dataStore.get())
+
+            let new_data = []
+            for(let i = Math.max(0, _data.length - 10); i < _data.length; i++){
+                new_data.push({
+                    ..._data[i],
+                    name: (Math.min(_data.length, 10) + Math.max(0, _data.length-10) - i - 1) * FETCH_INTERVAL / 1000
+                })
+            }
+            setProcessedData(new_data)
+        }, FETCH_INTERVAL)
+    },[])
+
     return (
         <>
             <LineChart width={1000} height={500} data={data} className="custom-chart bg-white p-4 m-4 rounded-md">

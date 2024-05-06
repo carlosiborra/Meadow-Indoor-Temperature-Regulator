@@ -1,7 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "baseUrl": "/home/dani/uni/devops/Sistemas-software-Grupo-1/web",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"
