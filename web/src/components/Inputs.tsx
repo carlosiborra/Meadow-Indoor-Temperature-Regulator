@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
-import type { Data } from '@/types/Data'
+import type { Data } from '../types/Data'
 import { useStore } from '@nanostores/react'
-import { dataStore } from '@/stores/data_store'
+import { dataStore } from '../stores/data_store'
 import { twMerge } from 'tailwind-merge'
 
 export default function Inputs(): React.JSX.Element {
