@@ -197,19 +197,27 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
-
+            // Round the new temperature to 2 decimal places
             var temp_new = Math.Round((Double)e.New.Celsius, 2);
-            //Check if the new temperature is an outlier
-            if (!start && ( temp_new < 0.75*Convert.ToDouble(Data.temp_act) ||temp_new > 1.25*Convert.ToDouble(Data.temp_act) ))
+
+            // Only check for outliers if start is false (not the first reading)
+            if (!start)
             {
-                Console.WriteLine($"Temperature={Data.temp_act}");
+                // Parse previous temperature
+                double prev_temp = Convert.ToDouble(Data.temp_act);
+
+                // Check if the new temperature is an outlier
+                if (temp_new < 0.4 * prev_temp || temp_new > 1.6 * prev_temp)
+                {
+                    Console.WriteLine($"Current temperature (outlier): {Data.temp_act}");
+                    return;
+                }
             }
-            else
-            {
-                Data.temp_act = temp_new.ToString();
-                start=false;
-                Console.WriteLine($"Temperature={Data.temp_act}");
-            }
+
+            // Update and print the new temperature
+            Data.temp_act = temp_new.ToString();
+            start = false;
+            Console.WriteLine($"Current temperature: {Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
