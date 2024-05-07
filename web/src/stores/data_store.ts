@@ -7,6 +7,28 @@ export const FETCH_INTERVAL = import.meta.env.FETCH_INTERVAL ?? 6000
 export const dataStore = atom<Data[]>([])
 
 export async function fetchData(): Promise<void> {
+
+    const controller = new AbortController();
+    const timeout = FETCH_INTERVAL / 2
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    let newTemp = null
+    const start = Date.now()
+    try{
+        const resp = await fetch(`${BASE_URL}/temp`, {
+            signal: controller.signal
+        });
+        if (resp.status === 200) {
+            const data = await resp.json()
+            if (data.temperatura != null) {
+                newTemp = data.temperatura
+            }
+        }
+        clearTimeout(id);
+    } catch {
+        console.log(`Failed to fetch server. Elapsed ${Date.now()-start}s`)
+    }
+
     let data = dataStore.get()
     let last_element: Data = {
         tmin: 12,
@@ -18,32 +40,13 @@ export async function fetchData(): Promise<void> {
         timestamp: Date.now()
     }
     if(data.length > 0){
-    last_element = data[data.length - 1]
+        last_element = data[data.length - 1]
     }
 
-    let current_temp = last_element.current_temp
 
-    const controller = new AbortController();
-    const timeout = FETCH_INTERVAL / 2
-    const id = setTimeout(() => controller.abort(), timeout);
-
-    const start = Date.now()
-    try{
-        const resp = await fetch(`${BASE_URL}/temp`, {
-            signal: controller.signal
-        });
-        if (resp.status === 200) {
-            const data = await resp.json()
-            if (data.temperatura != null) {
-                current_temp = data.temperatura
-            }
-        }
-        clearTimeout(id);
-    } catch {
-        console.log(`Failed to fetch server. Elapsed ${Date.now()-start}s`)
+    if(newTemp !== null){
+        last_element.current_temp = newTemp
     }
-
-    last_element.current_temp = current_temp
     last_element.timestamp = Date.now()
 
     data.push(last_element)
@@ -99,7 +102,8 @@ export async function updateParams(
         }
 
         let data = dataStore.get()
-        data.push(element)
+        const new_element = {...data.pop(), ...params} as Data
+        data.push(new_element)
         dataStore.set(data)
     } catch {
         console.log(`Failed to fetch server. Elapsed ${Date.now()-start}s`)
