@@ -51,10 +51,11 @@ public class PIDController
         previousError = error;
 
         // Compute the PID output
-        Data.output = (kp * proportional) + (ki * integral) + (kd * derivative);
-
-        // Limit output to range [0, 100]
-        Data.output = Math.Max(0, Math.Min(100, Data.output));
+        var output_sin_escalar = (kp * proportional) + (ki * integral) + (kd * derivative);
+        // Limit output to range [-100, 100]
+        output_sin_escalar= Math.Max(-100, Math.Min(100, output_sin_escalar));
+        // [0, 100]
+        Data.output = (output_sin_escalar+100)/2;
     }
 
     // Properties to get and set the PID gains
@@ -75,4 +76,5 @@ public class PIDController
         get { return kd; }
         set { kd = value; }
     }
+
 }
