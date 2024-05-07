@@ -107,7 +107,7 @@ public class RoundController
             int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
-            Console.WriteLine("❄️ Enfriando: PID output {0}", tiempoEncendido);
+            Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
             //relayPlaca.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
@@ -118,7 +118,7 @@ public class RoundController
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (100 - intensityBreakpoint) * periodoTiempo / 100;
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
-            Console.WriteLine("🔥 Calentando: {0}", tiempoEncendido);
+            Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
             //relayBombilla.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
