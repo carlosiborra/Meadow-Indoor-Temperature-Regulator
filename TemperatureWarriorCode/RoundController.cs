@@ -100,35 +100,28 @@ public class RoundController
     {
         Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
 
-        if (intensidad >= 0 && intensidad <= 100)
+        if (intensidad <= intensityBreakpoint)
         {
-            if (intensidad <= intensityBreakpoint)
-            {
-                // Código de enfriamiento
-                int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
-                relayPlaca.IsOn = true;
-                relayBombilla.IsOn = false;
-                Console.WriteLine("❄️ Enfriando: PID output {0}", tiempoEncendido);
-                Thread.Sleep(tiempoEncendido);
-                //relayPlaca.IsOn = false;
-                Thread.Sleep(periodoTiempo - tiempoEncendido);
-            }
-            else
-            {
-                // Código de calentamiento
-                int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (100 - intensityBreakpoint) * periodoTiempo / 100;
-                relayPlaca.IsOn = false;
-                relayBombilla.IsOn = true;
-                Console.WriteLine("🔥 Calentando: {0}", tiempoEncendido);
-                Thread.Sleep(tiempoEncendido);
-                //relayBombilla.IsOn = false;
-                Thread.Sleep(periodoTiempo - tiempoEncendido);
-            }
-            Console.WriteLine("Current temperature: {0}", Data.temp_act);
+            // Código de enfriamiento
+            int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
+            relayPlaca.IsOn = true;
+            relayBombilla.IsOn = false;
+            Console.WriteLine("❄️ Enfriando: PID output {0}", tiempoEncendido);
+            Thread.Sleep(tiempoEncendido);
+            //relayPlaca.IsOn = false;
+            Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         else
         {
-            Console.WriteLine("Error: La intensidad debe estar en el rango de 0 a 100.");
+            // Código de calentamiento
+            int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (100 - intensityBreakpoint) * periodoTiempo / 100;
+            relayPlaca.IsOn = false;
+            relayBombilla.IsOn = true;
+            Console.WriteLine("🔥 Calentando: {0}", tiempoEncendido);
+            Thread.Sleep(tiempoEncendido);
+            //relayBombilla.IsOn = false;
+            Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
+        Console.WriteLine("Current temperature: {0}", Data.temp_act);
     }
 }
