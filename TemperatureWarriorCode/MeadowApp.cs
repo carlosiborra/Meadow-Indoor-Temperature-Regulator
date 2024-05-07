@@ -16,6 +16,8 @@ using System.Diagnostics;
 using TemperatureWarriorCode.Web;
 using NETDuinoWar;
 using Meadow.Foundation.Relays;
+using System.Text.RegularExpressions;
+using System.Net;
 
 
 namespace TemperatureWarriorCode
@@ -61,29 +63,26 @@ namespace TemperatureWarriorCode
                 wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
                 await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
 
-                string IPAddress = wifi.IpAddress.ToString();
+                // Use wifi.IpAddress.ToString() instead of a placeholder IP
+                string ipAddressString = wifi.IpAddress.ToString();
+                //string ipAddressString = "127.0.0.1";
 
-                //Connnect to the WiFi network.
-                Console.WriteLine($"IP Address test: {IPAddress}");
-                Data.IP = IPAddress;
-                if (!string.IsNullOrWhiteSpace(IPAddress))
+                // Display the IP address
+                Console.WriteLine($"IP Address: {ipAddressString}:{Data.Port}");
+                Data.IP = ipAddressString;
+
+                if (!string.IsNullOrWhiteSpace(ipAddressString))
                 {
-                    Data.IP = IPAddress;
-                    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
+                    Data.IP = ipAddressString;
+
+                    // Convert the string IP address to a System.Net.IPAddress object
+                    IPAddress ipAddress = IPAddress.Parse(ipAddressString);
+
+                    // Pass the IPAddress object to the WebServer constructor
+                    WebServer webServer = new WebServer(ipAddress, Data.Port);
                     if (webServer != null)
                     {
-                        //webServer.Start();
-
-                        // Start the round
-                        Thread ronda = new Thread(MeadowApp.StartRound);
-                        ronda.Start();
-
-                        // Wait for the round to finish
-                        while (Data.is_working)
-                        {
-                            Thread.Sleep(1000);
-                        }
-                        Console.WriteLine($"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}");
+                        webServer.Start();
                     }
                 }
 

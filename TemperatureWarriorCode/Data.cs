@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Meadow.Foundation;
 
 namespace TemperatureWarriorCode
@@ -7,8 +7,8 @@ namespace TemperatureWarriorCode
     {
 
         //WEB VARIABLES
-        public static string IP = null;
-        public static int Port = 2550;
+        public static string IP = "127.0.0.1";
+        public static int Port = 3000;
 
         //ROUND VARIABLES
         public static string[] temp_max = { "34", "32" }; // In ºC

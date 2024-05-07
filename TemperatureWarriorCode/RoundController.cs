@@ -76,7 +76,8 @@ public class RoundController
                     pidController.Compute(targetTemperature);
                     // Obtener la salida del control PID
                     int output = (int)Data.output;
-                    Console.WriteLine("PID Output: " + output);
+                    //Console.WriteLine("PID Output: " + output);
+
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
                     Thread.Sleep(Data.refresh);
                 }
@@ -107,7 +108,7 @@ public class RoundController
                 int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
                 relayPlaca.IsOn = true;
                 relayBombilla.IsOn = false;
-                Console.WriteLine("❄️ Enfriando: {0}", tiempoEncendido);
+                Console.WriteLine("❄️ Enfriando: PID output {0}", tiempoEncendido);
                 Thread.Sleep(tiempoEncendido);
                 //relayPlaca.IsOn = false;
                 Thread.Sleep(periodoTiempo - tiempoEncendido);
@@ -123,6 +124,7 @@ public class RoundController
                 //relayBombilla.IsOn = false;
                 Thread.Sleep(periodoTiempo - tiempoEncendido);
             }
+            Console.WriteLine("Current temperature: {0}", Data.temp_act);
         }
         else
         {

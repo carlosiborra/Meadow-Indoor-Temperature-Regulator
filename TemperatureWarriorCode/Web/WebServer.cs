@@ -12,12 +12,13 @@ using YamlDotNet.Core.Tokens;
 using Meadow.Foundation.Graphics;
 using Meadow.Peripherals.Displays;
 using System.Collections.Specialized;
+using System.IO;
+using System.Text.Json;
 
 namespace TemperatureWarriorCode.Web
 {
     public class WebServer
     {
-
         private IPAddress _ip = null;
         private int _port = -1;
         private bool _runServer = true;
@@ -27,7 +28,6 @@ namespace TemperatureWarriorCode.Web
         private static bool ready = false;
         private static readonly string pass = "pass";
         private static string message = "";
-
 
         /// <summary>
         /// Delegate for the CommandReceived event.
@@ -40,14 +40,7 @@ namespace TemperatureWarriorCode.Web
         /// </summary>
         public event CommandReceivedHandler CommandReceived;
 
-        public string Url
-        {
-            get
-            {
-                string ip = _ip?.ToString() ?? "127.0.0.1";  // Convert _ip to string if it's not null; otherwise, use "127.0.0.1".
-                return $"http://{ip}:{_port}/";
-            }
-        }
+        public string Url => $"http://{_ip}:{_port}/";
 
         public WebServer(IPAddress ip, int port)
         {
@@ -55,23 +48,21 @@ namespace TemperatureWarriorCode.Web
             _port = port > 0 ? port : throw new ArgumentOutOfRangeException(nameof(port), "Port must be positive");
         }
 
-
         public async void Start()
         {
             if (_listener == null)
             {
                 _listener = new HttpListener();
-                _listener.Prefixes.Add(Url);
+                _listener.Prefixes.Add($"http://*:{_port}/"); // Accept requests from any IP
                 _listener.Start();
                 Console.WriteLine($"The url of the webserver is {Url}");
             }
 
-            // Handle requests
             try
             {
                 while (_runServer)
                 {
-                    HttpListenerContext ctx = await _listener.GetContextAsync();
+                    var ctx = await _listener.GetContextAsync();
                     await HandleIncomingConnections(ctx);
                 }
             }
@@ -81,58 +72,44 @@ namespace TemperatureWarriorCode.Web
             }
         }
 
-        public async void Stop()
+        public void Stop()
         {
             _runServer = false;
         }
 
         private async Task HandleIncomingConnections(HttpListenerContext ctx)
         {
+            var req = ctx.Request;
+            var resp = ctx.Response;
 
-            await Task.Run(async () =>
+            Console.WriteLine($"Request #{Interlocked.Increment(ref _requestCount)}: {req.HttpMethod} {req.Url}");
+
+            try
             {
-                // While a user hasn't visited the `shutdown` url, keep on handling requests
-                while (_runServer)
+                switch (req.Url.AbsolutePath)
                 {
+                    case "/shutdown" when req.HttpMethod == "POST":
+                        Console.WriteLine("Shutdown requested");
+                        _runServer = false;
+                        resp.StatusCode = 200;
+                        resp.StatusDescription = "OK";
+                        break;
 
-                    // Will wait here until we hear from a connection
-                    HttpListenerContext ctx = await _listener.GetContextAsync();
-
-                    // Peel out the requests and response objects
-                    HttpListenerRequest req = ctx.Request;
-                    HttpListenerResponse resp = ctx.Response;
-
-                    // Print out some info about the request
-                    Console.WriteLine($"Request #: {++_requestCount}");
-                    Console.WriteLine(req.Url);
-                    Console.WriteLine(req.HttpMethod);
-                    Console.WriteLine(req.UserHostName);
-                    Console.WriteLine(req.UserAgent);
-                    Console.WriteLine();
-
-
-                    try
-                    {
-                        // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
-                        if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown")
+                    case "/setparams" when req.HttpMethod == "POST":
+                        using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
                         {
-                            Console.WriteLine("Shutdown requested");
-                            _runServer = false;
-                            resp.StatusCode = 200;
-                            resp.StatusDescription = "OK";
-                        }
-                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/setparams")
-                        {
-                            //Get parameters
-                            NameValueCollection queryParams = req.QueryString;
-                            if (queryParams["pass"] != null && queryParams["temp_max"] != null && queryParams["temp_min"] != null && queryParams["display_refresh"] != null && queryParams["refresh"] != null && queryParams["round_time"] != null)
+                            var jsonBody = reader.ReadToEnd();
+                            using (JsonDocument document = JsonDocument.Parse(jsonBody))
                             {
-                                string pass_temp = queryParams["pass"];
-                                Data.temp_max = queryParams["temp_max"].Split(";");
-                                Data.temp_min = queryParams["temp_min"].Split(";");
-                                Data.display_refresh = Int16.Parse(queryParams["display_refresh"]);
-                                Data.refresh = Int16.Parse(queryParams["refresh"]);
-                                Data.round_time = queryParams["round_time"].Split(";");
+                                var body = document.RootElement;
+                                string pass_temp = body.GetProperty("pass").GetString();
+                                string temp_max_str = body.GetProperty("temp_max").GetString();
+                                string temp_min_str = body.GetProperty("temp_min").GetString();
+                                Data.temp_max = temp_max_str.Split(";");
+                                Data.temp_min = temp_min_str.Split(";");
+                                Data.display_refresh = body.GetProperty("display_refresh").GetInt16();
+                                Data.refresh = body.GetProperty("refresh").GetInt16();
+                                Data.round_time = body.GetProperty("round_time").GetString().Split(";");
 
                                 if (string.Equals(pass, pass_temp))
                                 {
@@ -157,65 +134,56 @@ namespace TemperatureWarriorCode.Web
                                     resp.StatusDescription = "Unauthorized";
                                 }
                             }
-                            else
-                            {
-                                resp.StatusCode = 400;
-                                resp.StatusDescription = "Bad Request";
-                            }
                         }
-                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/start")
+                        break;
+
+                    case "/start" when req.HttpMethod == "GET":
+                        Thread ronda = new Thread(MeadowApp.StartRound);
+                        ronda.Start();
+
+                        while (Data.is_working)
                         {
-
-                            // Start the round
-                            Thread ronda = new Thread(MeadowApp.StartRound);
-                            ronda.Start();
-
-                            // Wait for the round to finish
-                            while (Data.is_working)
-                            {
-                                Thread.Sleep(1000);
-                            }
-                            ready = false;
-
-                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}";
-                            resp.StatusCode = 200;
-                            resp.StatusDescription = "OK";
+                            Thread.Sleep(1000);
                         }
-                        else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/temp")
-                        {
-                            message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"temperatura\":{Data.temp_act}}}";
-                            resp.StatusCode = 200;
-                            resp.StatusDescription = "OK";
-                        }
-                        else
-                        {
-                            resp.StatusCode = 404;
-                            resp.StatusDescription = "Not Found";
-                        }
-                        if (message != "")
-                        {
-                            // Write the response info
-                            byte[] data = Encoding.UTF8.GetBytes(message);
-                            resp.ContentType = "application/json";
-                            resp.ContentEncoding = Encoding.UTF8;
-                            resp.ContentLength64 = data.LongLength;
+                        ready = false;
 
-                            // Write out to the response stream (asynchronously), then close it
-                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                        }
-                        message = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        resp.StatusCode = 500;
-                        resp.StatusDescription = "Internal Server Error";
-                    }
+                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}";
+                        resp.StatusCode = 200;
+                        resp.StatusDescription = "OK";
+                        break;
 
-                    resp.Close();
+                    case "/temp" when req.HttpMethod == "GET":
+                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"temperatura\":{Data.temp_act}}}";
+                        resp.StatusCode = 200;
+                        resp.StatusDescription = "OK";
+                        break;
+
+                    default:
+                        resp.StatusCode = 404;
+                        resp.StatusDescription = "Not Found";
+                        break;
                 }
 
-            });
+                if (!string.IsNullOrEmpty(message))
+                {
+                    byte[] data = Encoding.UTF8.GetBytes(message);
+                    resp.ContentType = "application/json";
+                    resp.ContentEncoding = Encoding.UTF8;
+                    resp.ContentLength64 = data.Length;
+                    await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                resp.StatusCode = 500;
+                resp.StatusDescription = "Internal Server Error";
+            }
+            finally
+            {
+                message = "";
+                resp.Close();
+            }
         }
 
         public static string showData(string[] data)
@@ -232,9 +200,9 @@ namespace TemperatureWarriorCode.Web
 
         public static bool tempCheck(string[] data, bool tipo)
         {
-            if (data == null) return true; // Early exit if data is null
+            if (data == null) return true;
 
-            double limit = tipo ? 12 : 30; // Determine the temperature limit based on tipo
+            double limit = tipo ? 12 : 30;
             foreach (string temp in data)
             {
                 if (double.TryParse(temp, out double tempValue) && ((tipo && tempValue < limit) || (!tipo && tempValue > limit)))
