@@ -39,6 +39,7 @@ namespace TemperatureWarriorCode
 
         public int count = 0;
         public bool start = true;
+        public int contiguous_outliers=0;
         public override async Task Run()
         {
             if (count == 0)
@@ -197,28 +198,38 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
-            // Round the new temperature to 2 decimal places
-            var temp_new = Math.Round((Double)e.New.Celsius, 2);
+        // Round the new temperature to 2 decimal places
+        var temp_new = Math.Round((double)e.New.Celsius, 2);
 
-            // Only check for outliers if start is false (not the first reading)
-            if (!start)
+        // Only check for outliers if start is false (not the first reading)
+        if (!start)
+        {
+            // Parse previous temperature
+            var prev_temp = Convert.ToDouble(Data.temp_act);
+
+            // Check if the new temperature is an outlier
+            if (temp_new < 0.4 * prev_temp || temp_new > 1.6 * prev_temp)
             {
-                // Parse previous temperature
-                double prev_temp = Convert.ToDouble(Data.temp_act);
-
-                // Check if the new temperature is an outlier
-                if (temp_new < 0.4 * prev_temp || temp_new > 1.6 * prev_temp)
+                // Increment the count of contiguous outliers
+                if (++contiguous_outliers < 3)
                 {
                     Console.WriteLine($"Current temperature (outlier): {Data.temp_act}");
                     return;
                 }
             }
-
-            // Update and print the new temperature
-            Data.temp_act = temp_new.ToString();
-            start = false;
-            Console.WriteLine($"Current temperature: {Data.temp_act}");
+            else
+            {
+                // Reset the count of contiguous outliers if the temperature is within range
+                contiguous_outliers = 0;
+            }
         }
+
+    // Update and print the new temperature
+    Data.temp_act = temp_new.ToString();
+    start = false;
+    Console.WriteLine($"Current temperature: {Data.temp_act}");
+}
+
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
         {
