@@ -1,6 +1,19 @@
 # 🌡 Temperature Warrior frontend
 
 ## Usage
+```bash
+# Create a .env file
+cp .env.example .env
+
+# Poblate .env file
+nano .env
+
+# Install dependencies
+pnpm i
+
+# Start local dev server
+pnpm dev
+```
 
 ## 🚀 Project Structure
 
