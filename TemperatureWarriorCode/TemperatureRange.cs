@@ -24,7 +24,7 @@ public class TemperatureRange
             throw new ArgumentException("Duration should be greater than zero.");
         }
 
-        if (checkTemperature(min) && checkTemperature(max))
+        if (CheckTemperature(min) && CheckTemperature(max))
         {
             Min = min;
             Max = max;
@@ -32,7 +32,7 @@ public class TemperatureRange
         }
     }
 
-    public bool checkTemperature(double temperature)
+    public bool CheckTemperature(double temperature)
     {
         if (temperature > max_allowed_temp)
         {
