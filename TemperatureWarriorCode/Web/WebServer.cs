@@ -107,8 +107,8 @@ namespace TemperatureWarriorCode.Web
                                 string temp_min_str = body.GetProperty("temp_min").GetString();
                                 Data.temp_max = temp_max_str.Split(";");
                                 Data.temp_min = temp_min_str.Split(";");
-                                Data.display_refresh = body.GetProperty("display_refresh").GetInt16();
-                                // Data.refresh = body.GetProperty("refresh").GetInt16();
+                                // Data.display_refresh = body.GetProperty("display_refresh").GetInt16();
+                                Data.refresh = body.GetProperty("refresh").GetInt16();
                                 Data.round_time = body.GetProperty("round_time").GetString().Split(";");
 
                                 if (string.Equals(pass, pass_temp))
