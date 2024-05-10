@@ -93,7 +93,7 @@ public class RoundController
             {
                 Console.WriteLine($"Target temperature: {targetTemperature}");
                 // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.
-                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 50, 1000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
             }
             Data.next_range=false;
             stopwatch.Stop();
