@@ -1,83 +1,100 @@
-import React, { useState, useEffect, useRef, type ChangeEventHandler } from 'react'
-import type { Data } from '../types/Data'
-import { useStore } from '@nanostores/react'
-import { twMerge } from 'tailwind-merge'
-import { FETCH_INTERVAL, dataStore, updateParams } from '@/stores/data_store'
+import React, { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-export default function Inputs(): React.JSX.Element {
-    const [data, setData] = useState(dataStore.get().pop())
-    const tminRef = useRef<HTMLInputElement>(null);
-    const tmaxRef = useRef<HTMLInputElement>(null);
-    const roundDurationRef = useRef<HTMLInputElement>(null);
-    const refreshRateRef = useRef<HTMLInputElement>(null);
-    const internalRateRef = useRef<HTMLInputElement>(null);
+const Inputs = () => {
+  const [minTemperature, setMinTemperature] = useState('');
+  const [maxTemperature, setMaxTemperature] = useState('');
+  const [roundDuration, setRoundDuration] = useState('');
+  const [internalRate, setInternalRate] = useState('');
+  const [refreshRate, setRefreshRate] = useState('');
 
-    useEffect(() => {
-        setInterval(() => {
-            setData(dataStore.get().pop())
-        }, FETCH_INTERVAL)
-    }, [])
+  const validateInputs = () => {
+    const tempValidFormat = /^((1[2-9]|2[0-9]|30);)*(1[2-9]|2[0-9]|30);?$/; // Números del 12 al 30 seguidos de ';'
+    const genericValidFormat = /^(\d+;)*\d+;?$/; // Cualquier número seguido de ';'
+    
+    const minValid = tempValidFormat.test(minTemperature);
+    const maxValid = tempValidFormat.test(maxTemperature);
+    const roundValid = genericValidFormat.test(roundDuration);
+    
+    const minValues = minTemperature.split(';').map(Number);
+    const maxValues = maxTemperature.split(';').map(Number);
+    
+    const allTempsValid = minValues.every((min, index) => min < maxValues[index]);
 
-    const onChangeFunc = () => {
-        console.log("Algo cambió")
-        const tmin = parseInt(tminRef.current?.value ?? `${data?.tmin}` ?? '12')
-        const tmax = parseInt(tmaxRef.current?.value ?? `${data?.tmax}` ?? '30')
-        const round_duration = parseInt(roundDurationRef.current?.value ?? `${data?.round_duration}` ?? '0')
-        const refresh_rate = parseInt(refreshRateRef.current?.value ?? `${data?.refresh_rate}` ?? '0')
-        const internal_rate = parseInt(internalRateRef.current?.value ?? `${data?.internal_rate}` ?? '0')
+    const entries = [minTemperature, maxTemperature, roundDuration];
+    const allSameLength = new Set(entries.map(entry => entry.split(';').filter(Boolean).length)).size === 1;
 
-        const password = localStorage.getItem('password') ?? ''
-        console.log(password)
-
-        setData({...data, tmin, tmax, internal_rate, refresh_rate, round_duration } as Data)
-        updateParams(password, { tmin, tmax, internal_rate, refresh_rate, round_duration })
+    if (!minValid || !maxValid || !roundValid || !allSameLength || !allTempsValid) {
+      alert('Uno o más campos están mal escritos, no tienen la misma cantidad de elementos, no están en el rango de 12 a 30, o los valores mínimos no son menores que los máximos correspondientes.');
+    } else {
+      alert('Todos los datos son correctos.');
     }
+  };
 
-    return (
-        <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[450px] items-center">
-            <span className='col-start-1'>
-                Temperature Range:
-            </span>
-            <div className='col-start-2 flex flex-row gap-2 items-center'>
-                <InputElement r={tminRef} id="tmin" onChangeFunc={onChangeFunc} value={data?.tmin ?? 12} units="°C" className='text-fountain-blue-500' />
-                <span className='font-bold'>-</span>
-                <InputElement r={tmaxRef} id="tmax" onChangeFunc={onChangeFunc} value={data?.tmax ?? 30} units="°C" className='text-guardsman-red-500' />
-            </div>
+  return (
+    <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[650px] items-center">
+      <span className="col-start-1">
+        Min Temperature (°C):
+      </span>
+      <input
+        type="text"
+        value={minTemperature}
+        onChange={(e) => setMinTemperature(e.target.value)}
+        className={twMerge("col-start-2 input text-fountain-blue-500 placeholder-fountain-blue-opacity-50")}
+        placeholder="12; 15; 14..."
+      />
+      
+      <span className="col-start-1">
+        Max Temperature (°C):
+      </span>
+      <input
+        type="text"
+        value={maxTemperature}
+        onChange={(e) => setMaxTemperature(e.target.value)}
+        className={twMerge("col-start-2 input text-guardsman-red-500 placeholder-guardsman-red-opacity-50")}
+        placeholder="25; 29; 30..."
+      />
+      
+      <span className="col-start-1">
+        Round Duration (s):
+      </span>
+      <input
+        type="text"
+        value={roundDuration}
+        onChange={(e) => setRoundDuration(e.target.value)}
+        className={twMerge("col-start-2 input")}
+        placeholder="15; 20; 34..."
+      />
+      
+      <div style={{ margin: '20px 0', background: 'white', height: '2px', gridColumn: "span 2" }}></div>
+      
+      <span className="col-start-1">
+        Internal Rate (ms):
+      </span>
+      <input
+        type="number"
+        value={internalRate}
+        onChange={(e) => setInternalRate(e.target.value)}
+        className={twMerge("col-start-2 input")}
+        placeholder='150'
+      />
+      
+      <span className="col-start-1">
+        Refresh Rate (ms):
+      </span>
+      <input
+        type="number"
+        value={refreshRate}
+        onChange={(e) => setRefreshRate(e.target.value)}
+        className={twMerge("col-start-2 input")}
+        placeholder='2000'
+      />
+      
+      <button className="col-start-2 mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={validateInputs}>
+        Enviar
+      </button>
+    </section>
+  );
+};
 
-            <span className='col-start-1'>
-                Round duration:
-            </span>
-            <InputElement r={roundDurationRef} id="round_duration" onChangeFunc={onChangeFunc} value={data?.round_duration ?? 0} units="s" className='col-start-2' />
-
-            <span className='col-start-1'>
-                Refresh Rate:
-            </span>
-            <InputElement r={refreshRateRef} id="refresh_rate" onChangeFunc={onChangeFunc} value={data?.refresh_rate ?? 0} units="ms" className='col-start-2' />
-
-            <span className='col-start-1'>
-                Internal Rate:
-            </span>
-            <InputElement r={internalRateRef} id="internal_rate" onChangeFunc={onChangeFunc} value={data?.internal_rate ?? 0} units="ms" className='col-start-2' />
-        </section>
-    )
-}
-
-const InputElement = ({ id, value, className, units, onChangeFunc, r }: {
-    id: string,
-    value: number,
-    units: string,
-    className?: string,
-    onChangeFunc: ChangeEventHandler<HTMLInputElement>,
-    r: React.ForwardedRef<HTMLInputElement>
-}): React.JSX.Element => {
-    return <label className={twMerge(
-        'input flex flex-row-reverse items-center gap-0',
-        'p-0 w-14 text-center text-light-primary bg-dark-secondary rounded-md',
-        className
-    )}>
-        <span className='text-start pr-1'>
-            {` ${units}`}
-        </span>
-        <input  ref={r} onChange={onChangeFunc} type="number" className="m-0 w-8 text-end" value={value} />
-    </label>
-}
+export default Inputs;

@@ -1,12 +1,21 @@
 ---
-import Layout from '../layouts/Layout.astro'
-import Inputs from '../components/Inputs'
-import Grafica from '../components/Grafica.tsx'
+import Layout from "../layouts/Layout.astro";
+import InputsOld from "../components/Inputs old.tsx";
+import Grafica from "../components/Grafica.tsx";
+import Button from "../components/Button.tsx";
+import Inputs from "../components/Inputs.tsx";
+
 ---
 
 <Layout>
-	<main class="">
-        <Inputs client:load/>
-        <Grafica client:load/>
+    <main class="">
+        <Inputs client:load />
+
+        <div>
+            <Button buttonText="Botón 1" />
+            <Button buttonText="Botón 2" />
+            <Button buttonText="Botón 3" />
+        </div>
+        <Grafica client:load />
     </main>
 </Layout>
