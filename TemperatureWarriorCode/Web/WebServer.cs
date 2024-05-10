@@ -14,7 +14,6 @@ using Meadow.Peripherals.Displays;
 using System.Collections.Specialized;
 using System.IO;
 using System.Text.Json;
-
 namespace TemperatureWarriorCode.Web
 {
     public class WebServer
@@ -153,9 +152,17 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/temp" when req.HttpMethod == "GET":
-                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"temperatura\":{Data.temp_act}}}";
+                        string json_structure = JsonSerializer.Serialize(Data.temp_structure, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        });
+                        message = $"{json_structure}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
+                        Data.temp_structure.temp_max.Clear();
+                        Data.temp_structure.temp_min.Clear();
+                        Data.temp_structure.temperatures.Clear();
+                        Data.temp_structure.timestamp.Clear();
                         break;
 
                     default:
