@@ -33,7 +33,12 @@ export default {
                 'dark-primary': '#222831',
                 'dark-secondary': '#393e46',
                 'light-primary': '#eeeeee',
-            }
+            },
+            placeholderColor: theme => ({
+                ...theme('colors'),
+                'fountain-blue-opacity-50': `rgba(0, 222, 222, 0.5)`,
+                'guardsman-red-opacity-50': `rgba(255, 40, 31, 0.5)`,
+              })
         },
 	},
 	plugins: [require('daisyui')],
