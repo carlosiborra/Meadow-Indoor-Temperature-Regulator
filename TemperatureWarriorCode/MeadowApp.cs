@@ -208,7 +208,7 @@ namespace TemperatureWarriorCode
             var prev_temp = Convert.ToDouble(Data.temp_act);
 
             // Check if the new temperature is an outlier
-            if (temp_new < 0.55 * prev_temp || temp_new > 1.35 * prev_temp)
+            if (temp_new < 0.55 * prev_temp || temp_new > 1.45 * prev_temp)
             {
                 // Increment the count of contiguous outliers
                 if (++contiguous_outliers < 3)

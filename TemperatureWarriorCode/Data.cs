@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Meadow.Foundation;
 
 namespace TemperatureWarriorCode
@@ -31,5 +32,24 @@ namespace TemperatureWarriorCode
             Color.FromHex("#269926"),
             Color.FromHex("#008500")
         };
+        
+        public static temp_info temp_structure = new temp_info();
+        
+
     }
 }
+public class temp_info {
+    public List<int> temp_max { get; set; }
+    public List<int> temp_min { get; set; }
+    public List<int> temperatures { get; set; }
+    public List<long> timestamp { get; set; }
+
+    public temp_info() {
+        temp_max = new List<int>();
+        temp_min = new List<int>();
+        temperatures = new List<int>();
+        timestamp = new List<long>();
+    }
+}
+
+
