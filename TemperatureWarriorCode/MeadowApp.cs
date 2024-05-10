@@ -97,6 +97,12 @@ namespace TemperatureWarriorCode
         //TW Combat Round
         public static void StartRound()
         {
+            Stopwatch timer = Stopwatch.StartNew();
+            timer.Start();
+
+            //Initialization of time controller
+            TimeController timeController = new TimeController();
+
             // Initialize the round controller
             var roundController = new RoundController();
 
@@ -106,7 +112,7 @@ namespace TemperatureWarriorCode
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
-            int totalTime = 0;
+             total_time = 0;
 
             for (int i = 0; i < Data.temp_min.Length; i++)
             {
@@ -117,19 +123,19 @@ namespace TemperatureWarriorCode
                 Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime}s");
 
                 temperatureRanges[i] = new TemperatureRange(tempMin, tempMax, roundTime);
-                totalTime += roundTime;
+                total_time += roundTime;
             }
 
             // Configure the round controller
-            if (roundController.Configure(temperatureRanges, totalTime, Data.refresh, relayBombilla, relayPlaca, out string errorMessage))
+            if (roundController.Configure(temperatureRanges, total_time, Data.refresh, relayBombilla, relayPlaca, out string errorMessage))
             {
                 Console.WriteLine("Round controller successfully configured.");
 
                 // Start the round operation (PID controller for each temperature range)
                 roundController.StartOperation();
 
-                // Start the round timer
-                Task.Run(() => Timer());
+                //Initialization of timer
+                new Thread(Timer).Start();
             }
             else
             {
@@ -137,21 +143,18 @@ namespace TemperatureWarriorCode
             }
         }
 
-        private static async Task Timer()
-        {
+        //Round Timer
+        private static void Timer() {
             Data.is_working = true;
-
-            for (int i = 0; i < Data.round_time.Length; i++)
-            {
+            for (int i = 0; i < Data.round_time.Length; i++) {
                 Data.time_left = int.Parse(Data.round_time[i]);
 
-                while (Data.time_left > 0)
-                {
+                while (Data.time_left > 0) {
                     Data.time_left--;
-                    await Task.Delay(1000); // Delay for 1 second
+                    Thread.Sleep(1000);
                 }
+                Data.next_range=true;
             }
-
             Data.is_working = false;
         }
 
