@@ -113,7 +113,7 @@ public class RoundController
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            //relayPlaca.IsOn = false;
+            relayPlaca.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         else
@@ -124,7 +124,7 @@ public class RoundController
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            //relayBombilla.IsOn = false;
+            relayBombilla.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         Console.WriteLine("Current temperature: {0}", Data.temp_act);

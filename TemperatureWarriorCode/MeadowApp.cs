@@ -120,7 +120,7 @@ namespace TemperatureWarriorCode
                 double tempMax = double.Parse(Data.temp_max[i]);
                 int roundTime = int.Parse(Data.round_time[i]) * 1000; // Convert seconds to milliseconds
 
-                Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime}s");
+                Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime/1000}s");
 
                 temperatureRanges[i] = new TemperatureRange(tempMin, tempMax, roundTime);
                 total_time += roundTime;
