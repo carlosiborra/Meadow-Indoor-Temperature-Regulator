@@ -115,7 +115,6 @@ public class RoundController
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            Console.WriteLine("Sleep 1 pasado");
             relayPlaca.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
