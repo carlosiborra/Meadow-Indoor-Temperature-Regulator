@@ -56,6 +56,7 @@ public class PIDController
         output_sin_escalar= Math.Max(-120, Math.Min(120, output_sin_escalar));
         // [0, 120]
         Data.output = (output_sin_escalar+120)/2;
+
     }
 
     // Properties to get and set the PID gains
