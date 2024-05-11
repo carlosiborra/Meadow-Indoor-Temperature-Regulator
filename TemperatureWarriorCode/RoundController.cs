@@ -77,13 +77,11 @@ public class RoundController
                     pidController.Compute(targetTemperature);
                     // Obtener la salida del control PID
                     int output = (int)Data.output;
-                    Console.WriteLine("Output calculado: {0}",output);
                     //Console.WriteLine("PID Output: " + output);
                     Data.temp_structure.temperatures.Add(int.Parse(Data.temp_act));
                     Data.temp_structure.temp_max.Add(int.Parse(Data.temp_max[i]));
                     Data.temp_structure.temp_min.Add(int.Parse(Data.temp_min[i]));
                     Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                    Console.WriteLine("Problema no es el add");
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
                     Thread.Sleep(Data.refresh);
                 }
@@ -112,19 +110,18 @@ public class RoundController
         if (intensidad <= intensityBreakpoint)
         {
             // Código de enfriamiento
-            int tiempoEncendido = intensidad * (100 / intensityBreakpoint) * periodoTiempo / 100;
+            int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            Console.WriteLine("Sleep 1 pasado");
             relayPlaca.IsOn = false;
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         else
         {
             // Código de calentamiento
-            int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (100 - intensityBreakpoint) * periodoTiempo / 100;
+            int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
