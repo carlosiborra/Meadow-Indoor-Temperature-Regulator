@@ -84,7 +84,7 @@ public class RoundController
                     Data.temp_structure.temp_min.Add(int.Parse(Data.temp_min[i]));
                     Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
-                    Thread.Sleep(Data.refresh/1000);
+                    Thread.Sleep(Data.refresh);
                 }
             });
             // Iniciamos el hilo de cálculo del control PID
@@ -115,9 +115,9 @@ public class RoundController
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
-            Thread.Sleep(1);
+            Thread.Sleep(tiempoEncendido/1000);
             relayPlaca.IsOn = false;
-            Thread.Sleep(1);
+            Thread.Sleep((periodoTiempo - tiempoEncendido)/1000);
         }
         else
         {
@@ -126,9 +126,9 @@ public class RoundController
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
-            Thread.Sleep(1);
+            Thread.Sleep(tiempoEncendido);
             relayBombilla.IsOn = false;
-            Thread.Sleep(1);
+            Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         Console.WriteLine("Current temperature: {0}", Data.temp_act);
     }

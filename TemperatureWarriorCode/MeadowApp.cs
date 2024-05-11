@@ -151,6 +151,7 @@ namespace TemperatureWarriorCode
 
                 while (Data.time_left > 0) {
                     Data.time_left--;
+                    Console.WriteLine($"Quedan: {Data.time_left} segundos");
                     Thread.Sleep(1000);
                 }
                 Data.next_range=true;
