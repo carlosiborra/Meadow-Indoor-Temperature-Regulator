@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useToast } from './ui/use-toast';
+import Button from './Button';
+import { useStore } from '@nanostores/react';
+import { displayRefreshRateStore } from '@/stores/displayRefreshRateStore';
+
 
 const Inputs = () => {
   const [minTemperature, setMinTemperature] = useState('');
@@ -10,7 +14,18 @@ const Inputs = () => {
   const [refreshRate, setRefreshRate] = useState('');
   const { toast } = useToast()
 
+  const displayRefreshRate = useStore(displayRefreshRateStore);
+
   function validateInputs(): boolean {
+    if (!minTemperature || !maxTemperature || !roundDuration || !internalRate || !refreshRate) {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'Todos los campos deben estar llenos',
+      })
+      return false;
+    }
+
     const tempValidFormat = /^(1[2-9]|2[0-9]|30)(;(1[2-9]|2[0-9]|30))*$/; // Números del 12 al 30 seguidos de ';'
     const genericValidFormat = /^\d+(;\d+)*$/; // Cualquier número seguido de ';'
 
@@ -62,8 +77,75 @@ const Inputs = () => {
       })
       return false;
     }
+    if (parseInt(internalRate) < 1) {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'La tasa interna debe ser mayor a 0',
+      })
+      return false;
+    }
+    if (parseInt(refreshRate) < 200 || parseInt(refreshRate) > 2000) {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'La tasa de refresco debe ser un valor entre 200 y 2000',
+      })
+      return false;
+    }
     return true;
   };
+
+  async function setParams(): Promise<void> {
+    if (validateInputs()) {
+      displayRefreshRateStore.set(parseInt(refreshRate));
+
+      const minValues = minTemperature.split(';').map(Number);
+      const maxValues = maxTemperature.split(';').map(Number);
+      const roundValues = roundDuration.split(';').map(Number);
+
+      const password = localStorage.getItem('password') ?? ''
+      console.log(password)
+
+      const params = {
+        passs: password,
+        tmin: minValues,
+        tmax: maxValues,
+        round_duration: roundValues,
+        internal_rate: Number(internalRate),
+      };
+
+      const controller = new AbortController();
+      const timeout = Math.round(displayRefreshRate * 2 / 3)
+      const id = setTimeout(() => controller.abort(), timeout);
+      const start = Date.now()
+
+      try {
+        const response = await fetch('http://localhost:5000/params?', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(params),
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          throw new Error('HTTP error ' + response.status);
+        }
+        await response.json();
+        toast({
+          title: 'Ok',
+          description: 'Parámetros guardados correctamente',
+        });
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: `No se pudo enviar los datos al servidor; Timeout: ${timeout}ms, Elaped: ${Date.now() - start}ms`
+        })
+      }
+    }
+  }
 
   return (
     <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[650px] items-center">
@@ -103,7 +185,7 @@ const Inputs = () => {
       <div style={{ margin: '20px 0', background: 'white', height: '2px', gridColumn: "span 2" }}></div>
 
       <span className="col-start-1">
-        Internal Rate (ms):
+        Internal rate (ms):
       </span>
       <input
         type="number"
@@ -114,7 +196,7 @@ const Inputs = () => {
       />
 
       <span className="col-start-1">
-        Refresh Rate (ms):
+        Display Refresh rate (ms):
       </span>
       <input
         type="number"
@@ -124,9 +206,9 @@ const Inputs = () => {
         placeholder='2000'
       />
 
-      <button className="col-start-2 mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={validateInputs}>
+      <Button className="col-start-2 mt-4 bg-fountain-blue-500 text-black" onClick={setParams}>
         Enviar
-      </button>
+      </Button>
     </section>
   );
 };

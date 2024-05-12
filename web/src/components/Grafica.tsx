@@ -1,5 +1,4 @@
 import { useStore } from "@nanostores/react";
-import { FETCH_INTERVAL, dataStore, fetchData } from "@/stores/data_store";
 import {
     LineChart,
     Line,
