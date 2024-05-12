@@ -90,7 +90,7 @@ public class RoundController
             thread.Start();
 
             // Se activa / desactiva el relay de la bombilla y la placa de Peltier según la salida del control PID
-            while (Data.next_range == false)
+            while (stopwatch.Elapsed.Seconds < temperatureRanges[i].Duration)
             {
                 Console.WriteLine($"Target temperature: {targetTemperature}");
                 // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.

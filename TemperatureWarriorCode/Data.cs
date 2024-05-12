@@ -16,7 +16,7 @@ namespace TemperatureWarriorCode
         public static string[] temp_min = { "32", "30" }; // In ºC
         // public static int display_refresh = 100; // In ms
         public static int refresh = 100; // In ms
-        public static string[] round_time = { "1000", "100" }; // in s
+        public static string[] round_time = { "20", "100" }; // in s
         public static double output;
         //START ROUND VARIABLES
         public static bool is_working = false;
