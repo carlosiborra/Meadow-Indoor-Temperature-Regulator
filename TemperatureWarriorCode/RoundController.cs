@@ -67,7 +67,8 @@ public class RoundController
         {
             double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             stopwatch.Start(); // Start the stopwatch
-
+            Console.WriteLine($"TAAAAAAAAAAAAAAAAAA: {int.Parse(Data.temp_act)}");
+            Data.temp_structure.temperatures.Add(int.Parse(Data.temp_act));
             // Se lanza un hilo que esté continuamente calculando la salida del control PID
             Thread thread = new Thread(() =>
             {
@@ -78,7 +79,7 @@ public class RoundController
                     // Obtener la salida del control PID
                     int output = (int)Data.output;
                     //Console.WriteLine("PID Output: " + output);
-
+                    
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
                     Thread.Sleep(Data.refresh);
                 }
