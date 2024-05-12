@@ -1,37 +1,43 @@
 ---
-import '@fontsource/dm-serif-display';
-import NavBar from '../components/NavBar.astro';
-import { ViewTransitions } from 'astro:transitions';
-
+import "@fontsource/dm-serif-display";
+import NavBar from "../components/NavBar.astro";
+import { ViewTransitions } from "astro:transitions";
+import "@/styles/globals.css";
+import { Toaster } from "@/components/ui/toaster";
 interface Props {
-	title?: string;
+    title?: string;
 }
 
-const title = 'Temperature Warrior' + (Astro.props.title ? ` - ${Astro.props.title}` : '');
+const title =
+    "Temperature Warrior" +
+    (Astro.props.title ? ` - ${Astro.props.title}` : "");
 ---
 
 <!doctype html>
-<html lang="en" class="bg-dark-primary text-light-primary">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="generator" content={Astro.generator} />
+        <title>{title}</title>
         <ViewTransitions />
-	</head>
-	<body>
-        <NavBar transition:persist/>
-		<slot />
-	</body>
+    </head>
+    <body class="bg-dark-primary text-light-primary">
+        <NavBar transition:persist />
+        <slot />
+        <Toaster client:idle/>
+        
+    </body>
 </html>
+
 <style is:global>
-    *{
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    body{
-        font-family: 'DM Serif Display', serif, system-ui, sans-serif;
-    }
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+	body {
+		font-family: "DM Serif Display", serif, system-ui, sans-serif;
+	}
 </style>
