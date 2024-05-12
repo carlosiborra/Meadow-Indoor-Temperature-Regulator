@@ -85,11 +85,11 @@ const Inputs = () => {
       })
       return false;
     }
-    if (parseInt(refreshRate) < 200 || parseInt(refreshRate) > 2000) {
+    if (parseInt(refreshRate) < 200) {
       toast({
         title: 'Error',
         variant: 'destructive',
-        description: 'La tasa de refresco debe ser un valor entre 200 y 2000',
+        description: 'La tasa de refresco debe ser un mayor que 200',
       })
       return false;
     }

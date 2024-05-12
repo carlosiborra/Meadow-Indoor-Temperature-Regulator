@@ -2,12 +2,13 @@
 import Layout from "@/layouts/Layout.astro";
 import StartStop from "@/components/StartStop.tsx";
 import Inputs from "@/components/Inputs.tsx";
+import Grafica from "@/components/Grafica";
 ---
 
 <Layout>
     <main class="">
         <Inputs client:load />
-        <!-- <Grafica client:load /> -->
+        <Grafica client:load />
         <StartStop client:load />
     </main>
 </Layout>
