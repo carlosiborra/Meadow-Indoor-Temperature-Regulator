@@ -67,19 +67,9 @@ public class RoundController
         {
             double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             stopwatch.Start(); // Start the stopwatch
-            int miEntero;
-            // Usando int.Parse()
-            // Usando int.TryParse()
-            if (int.TryParse(Data.temp_act, out miEntero))
-            {
-                // La conversión fue exitosa, miEntero contiene el valor entero
-                Console.WriteLine($"El valor entero es: {miEntero}");
-            }
-            else
-            {
-                // La conversión falló, manejar el error aquí
-                Console.WriteLine("No se pudo convertir el string a entero.");
-            }
+            
+            Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
+            
             // Se lanza un hilo que esté continuamente calculando la salida del control PID
             Thread thread = new Thread(() =>
             {

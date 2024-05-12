@@ -40,9 +40,9 @@ namespace TemperatureWarriorCode
     }
 }
 public class temp_info {
-    public List<int> temp_max { get; set; }
+    public List<double> temp_max { get; set; }
     public List<int> temp_min { get; set; }
-    public List<int> temperatures { get; set; }
+    public List<double> temperatures { get; set; }
     public List<long> timestamp { get; set; }
 
     public temp_info() {
