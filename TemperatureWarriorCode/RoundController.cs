@@ -90,16 +90,15 @@ public class RoundController
             thread.Start();
 
             // Se activa / desactiva el relay de la bombilla y la placa de Peltier según la salida del control PID
-            while (stopwatch.Elapsed.Milliseconds < temperatureRanges[i].Duration)
+            while (stopwatch.ElapsedMilliseconds  < temperatureRanges[i].Duration)
             {
                 Console.WriteLine($"Target temperature: {targetTemperature}");
-                Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.Elapsed.Milliseconds }");
+                Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.ElapsedMilliseconds  }");
                 Console.WriteLine($"temperatureRanges[i].Duration: {temperatureRanges[i].Duration }");
                 // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.
                 ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
             }
             Console.WriteLine("Siguiente Range");
-            Data.next_range=false;
             stopwatch.Stop();
             stopwatch.Reset();
         }
