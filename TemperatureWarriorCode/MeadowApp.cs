@@ -146,9 +146,10 @@ namespace TemperatureWarriorCode
         //Round Timer
         private static void Timer() {
             Data.is_working = true;
+            Console.WriteLine($"Hilo iniciado");
             for (int i = 0; i < Data.round_time.Length; i++) {
                 Data.time_left = int.Parse(Data.round_time[i]);
-
+                Console.WriteLine($"Quedan: {Data.time_left} segundos");
                 while (Data.time_left > 0) {
                     Data.time_left--;
                     Console.WriteLine($"Quedan: {Data.time_left} segundos");
