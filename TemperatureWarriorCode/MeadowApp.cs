@@ -135,7 +135,7 @@ namespace TemperatureWarriorCode
                 roundController.StartOperation();
 
                 //Initialization of timer
-                new Thread(Timer).Start();
+                Timer();
             }
             else
             {
