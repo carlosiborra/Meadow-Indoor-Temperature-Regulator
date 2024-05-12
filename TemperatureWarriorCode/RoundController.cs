@@ -78,10 +78,7 @@ public class RoundController
                     // Obtener la salida del control PID
                     int output = (int)Data.output;
                     //Console.WriteLine("PID Output: " + output);
-                    Data.temp_structure.temperatures.Add(int.Parse(Data.temp_act));
-                    Data.temp_structure.temp_max.Add(int.Parse(Data.temp_max[i]));
-                    Data.temp_structure.temp_min.Add(int.Parse(Data.temp_min[i]));
-                    Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+
                     // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
                     Thread.Sleep(Data.refresh);
                 }
