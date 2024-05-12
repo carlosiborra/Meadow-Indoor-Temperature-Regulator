@@ -41,13 +41,13 @@ namespace TemperatureWarriorCode
 }
 public class temp_info {
     public List<double> temp_max { get; set; }
-    public List<int> temp_min { get; set; }
+    public List<double> temp_min { get; set; }
     public List<double> temperatures { get; set; }
     public List<long> timestamp { get; set; }
 
     public temp_info() {
         temp_max = new List<double>();
-        temp_min = new List<int>();
+        temp_min = new List<double>();
         temperatures = new List<double>();
         timestamp = new List<long>();
     }
