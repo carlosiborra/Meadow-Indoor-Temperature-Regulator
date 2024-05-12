@@ -46,9 +46,9 @@ public class temp_info {
     public List<long> timestamp { get; set; }
 
     public temp_info() {
-        temp_max = new List<int>();
+        temp_max = new List<double>();
         temp_min = new List<int>();
-        temperatures = new List<int>();
+        temperatures = new List<double>();
         timestamp = new List<long>();
     }
 }
