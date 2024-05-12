@@ -99,6 +99,7 @@ public class RoundController
                 ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
             }
             Console.WriteLine("Siguiente Range");
+            pidController.Reset();
             stopwatch.Stop();
             stopwatch.Reset();
         }
