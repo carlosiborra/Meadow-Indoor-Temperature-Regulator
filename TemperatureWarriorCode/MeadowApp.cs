@@ -33,6 +33,8 @@ namespace TemperatureWarriorCode
         public static int total_time_in_range = 0;
         public static int total_time_out_of_range = 0;
 
+        public static TimeController timeController;
+
         // Relays
         public static Relay relayBombilla;
         public static Relay relayPlaca;
@@ -100,11 +102,9 @@ namespace TemperatureWarriorCode
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
-            //Initialization of time controller
-            TimeController timeController = new TimeController();
-
             // Initialize the round controller
             var roundController = new RoundController();
+            TimeController timeController = new TimeController();
 
             // Initialize relays
             Relay relayBombilla = InstantiateRelay(Device.Pins.D02, initialValue: false);
@@ -112,30 +112,48 @@ namespace TemperatureWarriorCode
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
-             total_time = 0;
+            total_time = 0;
 
+
+            Data.is_working = true;
             for (int i = 0; i < Data.temp_min.Length; i++)
             {
                 double tempMin = double.Parse(Data.temp_min[i]);
                 double tempMax = double.Parse(Data.temp_max[i]);
                 int roundTime = int.Parse(Data.round_time[i]) * 1000; // Convert seconds to milliseconds
 
-                Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime/1000}s");
+                Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime / 1000}s");
 
+                // Comprobamos que las temperaturas obtenidas están entre el rango de temperaturas máximas y mínimas
+                tempMax = roundController.CheckTemperature(tempMax);
+                tempMin = roundController.CheckTemperature(tempMin);
+                // Comprobamos también que la duración sea superior a 0
+                if (roundTime <= 0)
+                {
+                    throw new ArgumentException("Duration should be greater than zero.");
+                }
                 temperatureRanges[i] = new TemperatureRange(tempMin, tempMax, roundTime);
+
                 total_time += roundTime;
             }
+
+            bool success;
+            string error_message = null;
+            //Initialization of timecontroller with the ranges
+            timeController.DEBUG_MODE = true;
+            success = timeController.Configure(temperatureRanges, total_time, Data.refresh, out error_message);
+            Console.WriteLine(success);
 
             // Configure the round controller
             if (roundController.Configure(temperatureRanges, total_time, Data.refresh, relayBombilla, relayPlaca, out string errorMessage))
             {
                 Console.WriteLine("Round controller successfully configured.");
 
-                // Start the round operation (PID controller for each temperature range)
-                roundController.StartOperation();
-
                 //Initialization of timer
-                Timer();
+                new Thread(Timer).Start();
+                // Start the round operation (PID controller for each temperature range)
+                timeController.StartOperation();
+                roundController.StartOperation(timeController);
             }
             else
             {
