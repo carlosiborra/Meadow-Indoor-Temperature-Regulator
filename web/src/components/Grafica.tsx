@@ -14,6 +14,7 @@ import { displayRefreshRateStore } from "@/stores/displayRefreshRateStore";
 import type { Data } from "@/types/Data";
 
 const BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000'
+const N_DATA = 10
 
 export default function Grafica() {
     const displayRefreshRate = useStore(displayRefreshRateStore);
@@ -59,7 +60,7 @@ export default function Grafica() {
                 dataStore.set([...data, ...new_data])
                 const n = data.length
                 let newProcessedData = []
-                for (let i = n - 11; i < n; i++) {
+                for (let i = Math.min(n - 1 - N_DATA, 0); i < n; i++) {
                     newProcessedData.push({
                         name: Date.now() - data[i].timestamp,
                         temp_min: data[i].temp_min,
@@ -67,11 +68,11 @@ export default function Grafica() {
                         temperature: data[i].temperature
                     })
                 }
-    
+
                 setProcessedData(newProcessedData)
             } catch {
                 console.warn(`No se pudo recibir los datos del servidor; Timeout: ${timeout}ms, Elaped: ${Date.now() - start}ms`)
-            }           
+            }
         }, displayRefreshRate)
     }, [])
 
