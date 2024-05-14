@@ -14,18 +14,11 @@ import { displayRefreshRateStore } from "@/stores/displayRefreshRateStore";
 import type { Data } from "@/types/Data";
 
 const BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000'
-const N_DATA = 10
+const N_DATA = 500
 
 export default function Grafica() {
     const displayRefreshRate = useStore(displayRefreshRateStore);
     const data = useStore(dataStore)
-
-    const [processedData, setProcessedData] = useState<{
-        temp_max: number,
-        temp_min: number,
-        temperature: number,
-        name: number
-    }[]>([])
 
     useEffect(() => {
         console.log(`Base url: ${BASE_URL}`)
@@ -48,28 +41,15 @@ export default function Grafica() {
                 const body = await resp.json();
                 console.log(body)
                 let new_data: Data[] = []
-                for (let i = 0; i < body.temp_max.length; i++) {
+                for (let i = Math.max(0, body.temp_max.length - N_DATA - 1); i < body.temp_max.length; i++) {
                     new_data.push({
-                        temp_max: body.temp_max[i],
                         temp_min: body.temp_min[i],
+                        temp_max: body.temp_max[i],
                         temperature: body.temperatures[i],
                         timestamp: body.timestamp[i]
                     } satisfies Data)
                 }
-
-                dataStore.set([...data, ...new_data])
-                const n = data.length
-                let newProcessedData = []
-                for (let i = Math.min(n - 1 - N_DATA, 0); i < n; i++) {
-                    newProcessedData.push({
-                        name: Date.now() - data[i].timestamp,
-                        temp_min: data[i].temp_min,
-                        temp_max: data[i].temp_max,
-                        temperature: data[i].temperature
-                    })
-                }
-
-                setProcessedData(newProcessedData)
+                dataStore.set(new_data)
             } catch {
                 console.warn(`No se pudo recibir los datos del servidor; Timeout: ${timeout}ms, Elaped: ${Date.now() - start}ms`)
             }
@@ -78,9 +58,9 @@ export default function Grafica() {
 
     return (
         <>
-            <LineChart width={1000} height={500} data={processedData} className="custom-chart bg-white p-4 m-4 rounded-md">
+            <LineChart width={1000} height={500} data={data} className="custom-chart bg-white p-4 m-4 rounded-md">
                 <CartesianGrid strokeDasharray="4" />
-                <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
+                <XAxis />
                 <YAxis />
                 <Tooltip />
                 <Legend />
