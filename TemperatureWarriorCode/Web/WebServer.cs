@@ -147,13 +147,7 @@ namespace TemperatureWarriorCode.Web
                             Thread.Sleep(1000);
                         }
                         ready = false;
-                        Console.WriteLine(MeadowApp.timeController.LastRegisterTempDebug);
 
-                        MeadowApp.total_time_in_range += MeadowApp.timeController.TimeInRangeInMilliseconds;
-                        MeadowApp.total_time_out_of_range += MeadowApp.timeController.TimeOutOfRangeInMilliseconds;
-                        Data.time_in_range_temp = (MeadowApp.timeController.TimeInRangeInMilliseconds / 1000);
-                        Console.WriteLine("Tiempo dentro del rango " + (((double)MeadowApp.timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + MeadowApp.total_time + " s");
-                        Console.WriteLine("Tiempo fuera del rango " + ((double)MeadowApp.total_time_out_of_range / 1000) + " s de " + MeadowApp.total_time + " s");
                         message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";

@@ -5,6 +5,7 @@ using System.Threading;
 using TemperatureWarriorCode;
 using NETDuinoWar;
 using System.Runtime.InteropServices;
+using System.Xml.Schema;
 
 
 public class RoundController
@@ -16,6 +17,10 @@ public class RoundController
 
     private Relay relayBombilla;
     private Relay relayPlaca;
+
+    //Time Controller Values
+    public static int total_time_in_range = 0;
+    public static int total_time_out_of_range = 0;
 
     private static readonly double max_allowed_temp = 55.0; // In ºC
     private static readonly double max_temp_comp = 38.0; // In ºC
@@ -67,7 +72,7 @@ public class RoundController
         return temperature;
     }
 
-    public void StartOperation(TimeController timeController)
+    public void StartOperation(TimeController timeController, int total_time)
     {
         Console.WriteLine("Starting the operations (PID and relayController)...");
         // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
@@ -91,21 +96,19 @@ public class RoundController
 
             while (true)
             {
-                Console.WriteLine("Calculando OUTPUT DEL PID");
+                //Console.WriteLine("Calculando OUTPUT DEL PID");
                 // Calcular la salida del control PID
                 pidController.Compute(Data.targetTemperature);
                 // Obtener la salida del control PID
                 int output = (int)Data.output;
-                Console.WriteLine($"Output: {output}");
+                //Console.WriteLine($"Output: {output}");
                 //Console.WriteLine("PID Output: " + output);
                 Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
-
-                Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temp_max));
-                Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temp_min));
+                timeController.RegisterTemperature(Convert.ToDouble(Data.temp_act));
+                Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temperaturaMaxima));
+                Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temperaturaMinima));
                 Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                Console.WriteLine("Valores añadidos a la lista");
-                Console.WriteLine($"Refresh: {Data.refresh}" );
+                //Console.WriteLine("Valores añadidos a la lista");
                 // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
                 Thread.Sleep(Data.refresh);
             }
@@ -123,18 +126,19 @@ public class RoundController
             Data.targetTemperature = (temperatureRanges[i].MinTemp + temperatureRanges[i].MaxTemp) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
             Data.temperaturaMaxima = temperatureRanges[i].MaxTemp;
             Data.temperaturaMinima = temperatureRanges[i].MinTemp;
-            Data.temp_structure.temperatures.Add(int.Parse(Data.temp_act));
+            Console.WriteLine($"temp act: {Data.temp_act}");
+            Data.temp_structure.temperatures.Add(double.Parse(Data.temp_act));
             condicion.Set();
-            Console.WriteLine("Variable de condicion activada");
+            //Console.WriteLine("Variable de condicion activada");
 
             stopwatch.Start(); // Start the stopwatch
 
             // Se activa / desactiva el relay de la bombilla y la placa de Peltier según la salida del control PID
             while (stopwatch.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
             {
-                Console.WriteLine($"Target temperature: {Data.targetTemperature}");
-                Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.ElapsedMilliseconds}");
-                Console.WriteLine($"temperatureRanges[i].Duration: {temperatureRanges[i].RangeTimeInMilliseconds }");
+                //Console.WriteLine($"Target temperature: {Data.targetTemperature}");
+                //Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.ElapsedMilliseconds}");
+                //Console.WriteLine($"temperatureRanges[i].Duration: {temperatureRanges[i].RangeTimeInMilliseconds }");
                 // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.
                 ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
             }
@@ -142,12 +146,19 @@ public class RoundController
             stopwatch.Stop();
             stopwatch.Reset();
         }
+        total_time_in_range += timeController.TimeInRangeInMilliseconds;
+        total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
+        Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
+
+        Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
+        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+        Console.WriteLine($"Debug Output :{timeController.LastRegisterTempDebug}");
         Console.WriteLine("RONDA TERMINADA");
     }
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
     {
-        Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
+        //Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
         
         if (intensidad <= intensityBreakpoint)
         {

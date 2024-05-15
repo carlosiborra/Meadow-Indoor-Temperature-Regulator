@@ -23,6 +23,7 @@ using System.Net;
 namespace TemperatureWarriorCode
 {
     public class MeadowApp : App<F7FeatherV2>
+
     {
 
         //Temperature Sensor
@@ -30,8 +31,7 @@ namespace TemperatureWarriorCode
 
         //Time Controller Values
         public static int total_time = 0;
-        public static int total_time_in_range = 0;
-        public static int total_time_out_of_range = 0;
+
 
         public static TimeController timeController;
 
@@ -60,9 +60,13 @@ namespace TemperatureWarriorCode
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
                 wifi.NetworkConnected += WiFiAdapter_ConnectionCompleted;
 
-                //WiFi Channel
                 WifiNetwork wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
-
+                while (wifiNetwork == null) { 
+                    //WiFi Channel
+                    wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
+                    Console.WriteLine("No encuentro redes");
+                }
+                Console.WriteLine($"Wifi Networks: {wifiNetwork}");
                 wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
                 await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
 
@@ -145,7 +149,7 @@ namespace TemperatureWarriorCode
             Console.WriteLine(success);
 
             // Configure the round controller
-            if (roundController.Configure(temperatureRanges, total_time, Data.refresh, relayBombilla, relayPlaca, out string errorMessage))
+            if (roundController.Configure(temperatureRanges, total_time, Data.refresh, relayBombilla, relayPlaca, out string errorMessage) && success)
             {
                 Console.WriteLine("Round controller successfully configured.");
 
@@ -153,7 +157,7 @@ namespace TemperatureWarriorCode
                 new Thread(Timer).Start();
                 // Start the round operation (PID controller for each temperature range)
                 timeController.StartOperation();
-                roundController.StartOperation(timeController);
+                roundController.StartOperation(timeController, total_time);
             }
             else
             {
@@ -176,6 +180,7 @@ namespace TemperatureWarriorCode
                 Data.next_range=true;
             }
             Data.is_working = false;
+            Console.WriteLine("Reloj finalizado");
         }
 
 
