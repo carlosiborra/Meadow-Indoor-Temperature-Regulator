@@ -7,7 +7,6 @@ using NETDuinoWar;
 using System.Runtime.InteropServices;
 using System.Xml.Schema;
 
-
 public class RoundController
 {
     private TemperatureRange[] temperatureRanges;
@@ -25,6 +24,13 @@ public class RoundController
     private static readonly double max_allowed_temp = 55.0; // In ºC
     private static readonly double max_temp_comp = 38.0; // In ºC
     private static readonly double min_temp_comp = 12.0; // In ºC
+
+    static int SigmoidInt(int x)
+    {
+        x = x / 100;
+        double result = 1 / (1 + Math.Exp(-x));
+        return (int)Math.Round(result*100);
+    }
 
     public bool Configure(TemperatureRange[] ranges, int total, int refresh, Relay relayBombilla, Relay relayPlaca, out string errorMessage)
     {
@@ -164,6 +170,10 @@ public class RoundController
         {
             // Código de enfriamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
+            if (tiempoEncendido > 50)
+            {
+                tiempoEncendido = SigmoidInt(tiempoEncendido);
+            }
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
@@ -175,6 +185,10 @@ public class RoundController
         {
             // Código de calentamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
+            if (tiempoEncendido > 50)
+            {
+                tiempoEncendido = SigmoidInt(tiempoEncendido);
+            }
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
