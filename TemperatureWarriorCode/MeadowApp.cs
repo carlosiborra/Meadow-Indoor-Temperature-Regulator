@@ -171,10 +171,10 @@ namespace TemperatureWarriorCode
             Console.WriteLine($"Hilo iniciado");
             for (int i = 0; i < Data.round_time.Length; i++) {
                 Data.time_left = int.Parse(Data.round_time[i]);
-                Console.WriteLine($"Quedan: {Data.time_left} segundos");
+                Console.WriteLine($"{Data.time_left} seconds left");
                 while (Data.time_left > 0) {
                     Data.time_left--;
-                    Console.WriteLine($"Quedan: {Data.time_left} segundos");
+                    Console.WriteLine($"{Data.time_left} seconds left");
                     Thread.Sleep(1000);
                 }
                 Data.next_range=true;
@@ -275,7 +275,7 @@ namespace TemperatureWarriorCode
         protected WifiNetwork ScanForAccessPoints(string SSID)
         {
             WifiNetwork wifiNetwork = null;
-            ObservableCollection<WifiNetwork> networks = new ObservableCollection<WifiNetwork>(Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>().Scan()?.Result?.ToList()); //REVISAR SI ESTO ESTA BIEN
+            ObservableCollection<WifiNetwork> networks = new ObservableCollection<WifiNetwork>(Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>().Scan()?.Result?.ToList());
             wifiNetwork = networks?.FirstOrDefault(x => string.Compare(x.Ssid, SSID, true) == 0);
             return wifiNetwork;
         }

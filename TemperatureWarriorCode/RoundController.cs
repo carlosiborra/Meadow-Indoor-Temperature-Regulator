@@ -119,7 +119,7 @@ public class RoundController
                 Thread.Sleep(Data.refresh);
             }
         });
-        // Iniciamos el hilo de cálculo del control PID
+        // Iniciamos el hilo de cálculo del control PID -> System.ExecutionEngineException: 'Couldn't create thread. Error 0x0'
         thread.Start();
 
         Stopwatch stopwatch = new Stopwatch(); // Create a stopwatch to measure the time elapsed       

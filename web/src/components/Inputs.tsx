@@ -15,6 +15,7 @@ const Inputs = () => {
   const { toast } = useToast()
 
   const displayRefreshRate = useStore(displayRefreshRateStore);
+  const PUBLIC_BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
   function validateInputs(): boolean {
     if (!minTemperature || !maxTemperature || !roundDuration || !internalRate || !refreshRate) {
@@ -99,29 +100,25 @@ const Inputs = () => {
   async function setParams(): Promise<void> {
     if (validateInputs()) {
       displayRefreshRateStore.set(parseInt(refreshRate));
-
-      const minValues = minTemperature.split(';').map(Number);
-      const maxValues = maxTemperature.split(';').map(Number);
-      const roundValues = roundDuration.split(';').map(Number);
-
+      
       const password = localStorage.getItem('password') ?? ''
-      console.log(password)
-
+      
+      // Note: data is passed as str and the backed does the transformation
       const params = {
-        passs: password,
-        tmin: minValues,
-        tmax: maxValues,
-        round_duration: roundValues,
-        internal_rate: Number(internalRate),
+        pass: password,
+        temp_min: minTemperature,
+        temp_max: maxTemperature,
+        round_time: roundDuration,
+        refresh: Number(internalRate),
       };
 
       const controller = new AbortController();
-      const timeout = Math.round(displayRefreshRate * 2 / 3)
-      const id = setTimeout(() => controller.abort(), timeout);
+      // const timeout = Math.round(displayRefreshRate * 2 / 3)
+      // const id = setTimeout(() => controller.abort(), timeout);
       const start = Date.now()
 
       try {
-        const response = await fetch('http://localhost:5000/params?', {
+        const response = await fetch(`${PUBLIC_BASE_URL}/setparams`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -141,7 +138,7 @@ const Inputs = () => {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: `No se pudo enviar los datos al servidor; Timeout: ${timeout}ms, Elaped: ${Date.now() - start}ms`
+          description: `No se pudo enviar los datos al servidor; Elaped: ${Date.now() - start}ms`
         })
       }
     }

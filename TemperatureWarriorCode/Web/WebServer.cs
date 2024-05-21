@@ -78,12 +78,27 @@ namespace TemperatureWarriorCode.Web
             _runServer = false;
         }
 
-        private async Task HandleIncomingConnections(HttpListenerContext ctx)
+        public async Task HandleIncomingConnections(HttpListenerContext ctx)
         {
             var req = ctx.Request;
             var resp = ctx.Response;
 
-            Console.WriteLine($"Request #{Interlocked.Increment(ref _requestCount)}: {req.HttpMethod} {req.Url}");
+            Console.WriteLine($"Request #{Interlocked.Increment(ref _requestCount)}: {req.Url.AbsolutePath} {req.HttpMethod} {req.Url} - {req.UserHostAddress}");
+
+            // Handle CORS preflight request
+            if (req.HttpMethod == "OPTIONS")
+            {
+                resp.AddHeader("Access-Control-Allow-Origin", "*");
+                resp.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                resp.AddHeader("Access-Control-Allow-Headers", "Content-Type");
+                resp.AddHeader("Access-Control-Max-Age", "86400"); // Cache preflight response for 24 hours
+                resp.StatusCode = 204; // No Content
+                resp.Close();
+                return;
+            }
+
+            // Set CORS headers for actual requests
+            resp.AddHeader("Access-Control-Allow-Origin", "*");
 
             try
             {
@@ -97,20 +112,23 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/setparams" when req.HttpMethod == "POST":
+                        Console.WriteLine("Setting parameters");
                         using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
                         {
-                            var jsonBody = reader.ReadToEnd();
+                            var jsonBody = await reader.ReadToEndAsync();
                             using (JsonDocument document = JsonDocument.Parse(jsonBody))
                             {
                                 var body = document.RootElement;
                                 string pass_temp = body.GetProperty("pass").GetString();
                                 string temp_max_str = body.GetProperty("temp_max").GetString();
                                 string temp_min_str = body.GetProperty("temp_min").GetString();
+
                                 Data.temp_max = temp_max_str.Split(";");
                                 Data.temp_min = temp_min_str.Split(";");
-                                // Data.display_refresh = body.GetProperty("display_refresh").GetInt16();
                                 Data.refresh = body.GetProperty("refresh").GetInt16();
                                 Data.round_time = body.GetProperty("round_time").GetString().Split(";");
+
+                                Console.WriteLine($"Temp max: {showData(Data.temp_max)}\nTemp min: {showData(Data.temp_min)}\nRefresh: {Data.refresh}\nRound time: {showData(Data.round_time)}");
 
                                 if (string.Equals(pass, pass_temp))
                                 {
@@ -139,7 +157,8 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/start" when req.HttpMethod == "GET":
-                        Thread ronda = new Thread(MeadowApp.StartRound);
+                        Console.WriteLine("Starting round");
+                        var ronda = new Thread(MeadowApp.StartRound);
                         ronda.Start();
 
                         while (Data.is_working)
@@ -154,17 +173,34 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/temp" when req.HttpMethod == "GET":
+                        Console.WriteLine("Obtaining temperature");
+
+                        // Serialize the temp_info object to a JSON string
                         string json_structure = JsonSerializer.Serialize(Data.temp_structure, new JsonSerializerOptions
                         {
                             WriteIndented = true
                         });
+
+                        // Prepare the response message
                         message = $"{json_structure}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
+                        resp.ContentType = "application/json";
+
+                        // Send the JSON response
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            byte[] data = Encoding.UTF8.GetBytes(message);
+                            resp.ContentLength64 = data.Length;
+                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                        }
+
+                        // Clear the data after sending the response
                         Data.temp_structure.temp_max.Clear();
                         Data.temp_structure.temp_min.Clear();
                         Data.temp_structure.temperatures.Clear();
                         Data.temp_structure.timestamp.Clear();
+
                         break;
 
                     default:
@@ -181,6 +217,12 @@ namespace TemperatureWarriorCode.Web
                     resp.ContentLength64 = data.Length;
                     await resp.OutputStream.WriteAsync(data, 0, data.Length);
                 }
+            }
+            catch (JsonException jsonEx)
+            {
+                Console.WriteLine($"JSON Error: {jsonEx.Message}");
+                resp.StatusCode = 400;
+                resp.StatusDescription = "Bad Request";
             }
             catch (Exception ex)
             {
