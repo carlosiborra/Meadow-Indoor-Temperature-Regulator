@@ -19,7 +19,6 @@ using Meadow.Foundation.Relays;
 using System.Text.RegularExpressions;
 using System.Net;
 
-
 namespace TemperatureWarriorCode
 {
     public class MeadowApp : App<F7FeatherV2>
@@ -32,6 +31,7 @@ namespace TemperatureWarriorCode
         //Time Controller Values
         public static int total_time = 0;
 
+        public WebServer webServer;
 
         public static TimeController timeController;
 
@@ -101,7 +101,7 @@ namespace TemperatureWarriorCode
 
 
         //TW Combat Round
-        public static void StartRound()
+        public static async Task StartRoundAsync()
         {
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
@@ -116,8 +116,7 @@ namespace TemperatureWarriorCode
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
-            total_time = 0;
-
+            int total_time = 0;
 
             Data.is_working = true;
             for (int i = 0; i < Data.temp_min.Length; i++)
@@ -128,10 +127,11 @@ namespace TemperatureWarriorCode
 
                 Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime / 1000}s");
 
-                // Comprobamos que las temperaturas obtenidas están entre el rango de temperaturas máximas y mínimas
+                // Check that the temperatures obtained are within the range of maximum and minimum temperatures
                 tempMax = roundController.CheckTemperature(tempMax);
                 tempMin = roundController.CheckTemperature(tempMin);
-                // Comprobamos también que la duración sea superior a 0
+
+                // Ensure the duration is greater than 0
                 if (roundTime <= 0)
                 {
                     throw new ArgumentException("Duration should be greater than zero.");
@@ -143,7 +143,7 @@ namespace TemperatureWarriorCode
 
             bool success;
             string error_message = null;
-            //Initialization of timecontroller with the ranges
+            // Initialization of timecontroller with the ranges
             timeController.DEBUG_MODE = true;
             success = timeController.Configure(temperatureRanges, total_time, Data.refresh, out error_message);
             Console.WriteLine(success);
@@ -153,11 +153,12 @@ namespace TemperatureWarriorCode
             {
                 Console.WriteLine("Round controller successfully configured.");
 
-                //Initialization of timer
-                new Thread(Timer).Start();
+                // Initialization of timer
+                _ = Task.Run(() => TimerAsync());  // Run the timer asynchronously
+
                 // Start the round operation (PID controller for each temperature range)
-                timeController.StartOperation();
-                roundController.StartOperation(timeController, total_time);
+                await Task.Run(() => timeController.StartOperation());
+                await Task.Run(() => roundController.StartOperation(timeController, total_time));
             }
             else
             {
@@ -166,18 +167,21 @@ namespace TemperatureWarriorCode
         }
 
         //Round Timer
-        private static void Timer() {
+        private static async Task TimerAsync()
+        {
             Data.is_working = true;
             Console.WriteLine($"Hilo iniciado");
-            for (int i = 0; i < Data.round_time.Length; i++) {
+            for (int i = 0; i < Data.round_time.Length; i++)
+            {
                 Data.time_left = int.Parse(Data.round_time[i]);
                 Console.WriteLine($"{Data.time_left} seconds left");
-                while (Data.time_left > 0) {
+                while (Data.time_left > 0)
+                {
                     Data.time_left--;
                     Console.WriteLine($"{Data.time_left} seconds left");
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000);
                 }
-                Data.next_range=true;
+                Data.next_range = true;
             }
             Data.is_working = false;
             Console.WriteLine("Reloj finalizado");
@@ -235,8 +239,14 @@ namespace TemperatureWarriorCode
             // Parse previous temperature
             var prev_temp = Convert.ToDouble(Data.temp_act);
 
+            if (temp_new > RoundController.max_allowed_temp || temp_new < RoundController.min_allowed_temp)
+            {
+                Console.WriteLine("Shutdown requested");
+                    webServer.Stop();
+            }
+
             // Check if the new temperature is an outlier
-            if (temp_new < 0.55 * prev_temp || temp_new > 1.45 * prev_temp)
+            if (temp_new < prev_temp - 15.00 || temp_new > prev_temp + 15.00)
             {
                 // Increment the count of contiguous outliers
                 if (++contiguous_outliers < 3)

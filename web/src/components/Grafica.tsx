@@ -42,7 +42,7 @@ export default function Grafica() {
                 console.log(body);
 
                 let new_data: Data[] = [];
-                for (let i = Math.max(0, body.temp_max.length - N_DATA - 1); i < body.temp_max.length; i++) {
+                for (let i = 0; i < body.temp_max.length; i++) {
                     new_data.push({
                         temp_min: body.temp_min[i],
                         temp_max: body.temp_max[i],
@@ -50,7 +50,7 @@ export default function Grafica() {
                         timestamp: body.timestamp[i],
                     } satisfies Data);
                 }
-                dataStore.set(new_data);
+                dataStore.set(new_data.slice(-N_DATA));
             } catch (error) {
                 console.warn(`No se pudo recibir los datos del servidor; Elapsed: ${Date.now() - start}ms`);
             }
@@ -71,7 +71,7 @@ export default function Grafica() {
         <>
             <LineChart width={1000} height={500} data={data} className="custom-chart bg-white p-4 m-4 rounded-md">
                 <CartesianGrid strokeDasharray="4" />
-                <XAxis />
+                <XAxis dataKey="timestamp" />
                 <YAxis />
                 <Tooltip />
                 <Legend />

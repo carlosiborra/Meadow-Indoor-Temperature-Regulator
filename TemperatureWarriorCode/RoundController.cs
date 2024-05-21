@@ -21,7 +21,8 @@ public class RoundController
     public static int total_time_in_range = 0;
     public static int total_time_out_of_range = 0;
 
-    private static readonly double max_allowed_temp = 55.0; // In ºC
+    public static readonly double min_allowed_temp = -12.0; // In ºC
+    public static readonly double max_allowed_temp = 55.0; // In ºC
     private static readonly double max_temp_comp = 38.0; // In ºC
     private static readonly double min_temp_comp = 12.0; // In ºC
 
@@ -83,9 +84,14 @@ public class RoundController
         Console.WriteLine("Starting the operations (PID and relayController)...");
 
         // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
-        double kp = 0.8;
-        double ki = 0.2;
-        double kd = 0.001;
+        /*
+        Proportional Gain (kp): Increasing the proportional gain will generally make the controller respond faster to errors. However, too high a kp can cause the system to become unstable and oscillate.
+        Integral Gain (ki): Increasing the integral gain helps eliminate steady-state error, but too high a ki can cause the system to respond too aggressively, leading to overshooting and instability.
+        Derivative Gain (kd): Increasing the derivative gain can help dampen the response and reduce overshooting by predicting future errors based on the rate of change. However, too high a kd can make the system overly sensitive to noise.
+        */
+        double kp = 0.9;  // Increased for faster response
+        double ki = 0.2;  // Keep same, or adjust based on system response
+        double kd = 0.003; // Increased to help dampen the response
 
         // Create a PID controller with the specified gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
         pidController = new PIDController(kp, ki, kd);
@@ -93,6 +99,9 @@ public class RoundController
 
         // Inicializamos una variable de condición
         ManualResetEventSlim condicion = new ManualResetEventSlim(false);
+        ManualResetEventSlim condicion_PID = new ManualResetEventSlim(false);
+
+
 
         // Use ThreadPool to manage thread creation
         ThreadPool.QueueUserWorkItem(_ =>
@@ -106,20 +115,41 @@ public class RoundController
                 try
                 {
                     // Calcular la salida del control PID
-                    pidController.Compute(Data.targetTemperature);
+                    condicion_PID.Wait();
                     // Obtener la salida del control PID
                     int output = (int)Data.output;
-                    Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
-                    timeController.RegisterTemperature(Convert.ToDouble(Data.temp_act));
-                    Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temperaturaMaxima));
-                    Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temperaturaMinima));
-                    Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                    // Use a lock
+                    lock (Data.temp_act)
+                    {
+                        Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
+                        timeController.RegisterTemperature(Convert.ToDouble(Data.temp_act));
+                        Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temperaturaMaxima));
+                        Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temperaturaMinima));
+                        Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                    }
                     Thread.Sleep(Data.refresh);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error in PID computation thread: {ex.Message}");
                 }
+            }
+        });
+
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+             while (true)
+            {
+                try
+                {
+                    // Calcular la salida del control PID
+                    pidController.Compute(Data.targetTemperature);
+                    condicion_PID.Set();
+                }catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in PID computation thread: {ex.Message}");
+                }
+                Thread.Sleep(100);
             }
         });
 
@@ -138,7 +168,7 @@ public class RoundController
 
             while (stopwatch.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
             {
-                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 5000); // Applying the PID controller output to the system.
             }
             pidController.Reset();
             stopwatch.Stop();
@@ -149,44 +179,50 @@ public class RoundController
         total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
         Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
 
-        Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+        Console.WriteLine("\nTiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time / 1000 + " s");
+        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time / 1000 + " s");
         Console.WriteLine($"Debug Output :{timeController.LastRegisterTempDebug}");
-        Console.WriteLine("RONDA TERMINADA");
+        Console.WriteLine("RONDA TERMINADA\n");
     }
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
     {
-        //Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
+        Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
         
         if (intensidad <= intensityBreakpoint)
         {
             // Código de enfriamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
-            if (tiempoEncendido > 50)
-            {
-                tiempoEncendido = SigmoidInt(tiempoEncendido);
-            }
+            // if (tiempoEncendido > 50)
+            // {
+            //     tiempoEncendido = SigmoidInt(tiempoEncendido);
+            // }
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ ENFRIANDO: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            relayPlaca.IsOn = false;
+            if(tiempoEncendido !=  periodoTiempo)
+            {
+                relayPlaca.IsOn = false;
+            }
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         else
         {
             // Código de calentamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
-            if (tiempoEncendido > 50)
-            {
-                tiempoEncendido = SigmoidInt(tiempoEncendido);
-            }
+            // if (tiempoEncendido > 50)
+            // {
+            //     tiempoEncendido = SigmoidInt(tiempoEncendido);
+            // }
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 CALENTANDO: Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
             Thread.Sleep(tiempoEncendido);
-            relayBombilla.IsOn = false;
+            if(tiempoEncendido !=  periodoTiempo)
+            {
+                relayBombilla.IsOn = false;
+            }
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
         Console.WriteLine("Current temperature: {0}", Data.temp_act);

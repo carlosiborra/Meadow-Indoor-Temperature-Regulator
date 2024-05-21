@@ -22,7 +22,7 @@ namespace TemperatureWarriorCode.Web
     {
         private IPAddress _ip = null;
         private int _port = -1;
-        private bool _runServer = true;
+        public bool _runServer = true;
         private static HttpListener _listener;
         private static int _pageViews = 0;
         private static int _requestCount = 0;
@@ -97,9 +97,6 @@ namespace TemperatureWarriorCode.Web
                 return;
             }
 
-            // Set CORS headers for actual requests
-            resp.AddHeader("Access-Control-Allow-Origin", "*");
-
             try
             {
                 switch (req.Url.AbsolutePath)
@@ -107,6 +104,7 @@ namespace TemperatureWarriorCode.Web
                     case "/shutdown" when req.HttpMethod == "POST":
                         Console.WriteLine("Shutdown requested");
                         _runServer = false;
+                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"message\":\"Server shutting down.\"}}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
                         break;
@@ -158,18 +156,18 @@ namespace TemperatureWarriorCode.Web
 
                     case "/start" when req.HttpMethod == "GET":
                         Console.WriteLine("Starting round");
-                        var ronda = new Thread(MeadowApp.StartRound);
-                        ronda.Start();
 
-                        while (Data.is_working)
+                        // Run the round operation asynchronously
+                        _ = Task.Run(async () =>
                         {
-                            Thread.Sleep(1000);
-                        }
-                        ready = false;
+                            await MeadowApp.StartRoundAsync();
+                            Data.is_working = false;
+                        });
 
-                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"tiempo_rango\":{Data.time_in_range_temp}}}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
+                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"message\":\"Round started.\"}}";
+
                         break;
 
                     case "/temp" when req.HttpMethod == "GET":
@@ -183,24 +181,19 @@ namespace TemperatureWarriorCode.Web
 
                         // Prepare the response message
                         message = $"{json_structure}";
+
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
-                        resp.ContentType = "application/json";
 
-                        // Send the JSON response
-                        if (!string.IsNullOrEmpty(message))
+                        // Clear the data after sending the response using a lock
+                        lock (Data.temp_structure)
                         {
-                            byte[] data = Encoding.UTF8.GetBytes(message);
-                            resp.ContentLength64 = data.Length;
-                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                            Data.temp_structure.temp_max.Clear();
+                            Data.temp_structure.temp_min.Clear();
+                            Data.temp_structure.temperatures.Clear();
+                            Data.temp_structure.timestamp.Clear();
                         }
-
-                        // Clear the data after sending the response
-                        Data.temp_structure.temp_max.Clear();
-                        Data.temp_structure.temp_min.Clear();
-                        Data.temp_structure.temperatures.Clear();
-                        Data.temp_structure.timestamp.Clear();
-
+       
                         break;
 
                     default:
@@ -208,6 +201,10 @@ namespace TemperatureWarriorCode.Web
                         resp.StatusDescription = "Not Found";
                         break;
                 }
+
+                resp.AddHeader("Access-Control-Allow-Origin", "*");
+                resp.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                resp.AddHeader("Access-Control-Allow-Headers", "Content-Type");
 
                 if (!string.IsNullOrEmpty(message))
                 {
