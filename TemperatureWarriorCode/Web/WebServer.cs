@@ -171,8 +171,6 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/temp" when req.HttpMethod == "GET":
-                        Console.WriteLine("Obtaining temperature");
-
                         // Serialize the temp_info object to a JSON string
                         string json_structure = JsonSerializer.Serialize(Data.temp_structure, new JsonSerializerOptions
                         {
@@ -193,7 +191,7 @@ namespace TemperatureWarriorCode.Web
                             Data.temp_structure.temperatures.Clear();
                             Data.temp_structure.timestamp.Clear();
                         }
-       
+
                         break;
 
                     default:

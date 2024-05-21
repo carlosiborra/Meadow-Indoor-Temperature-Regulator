@@ -35,6 +35,7 @@ export default function StartStop() {
 
                     try {
                         await fetch(`${PUBLIC_BASE_URL}/shutdown`, {
+                            method: 'POST',
                             signal: controller.signal
                         });
                         toast({

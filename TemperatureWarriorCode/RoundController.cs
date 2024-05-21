@@ -193,10 +193,6 @@ public class RoundController
         {
             // Código de enfriamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
-            // if (tiempoEncendido > 50)
-            // {
-            //     tiempoEncendido = SigmoidInt(tiempoEncendido);
-            // }
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ ENFRIANDO: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
@@ -211,10 +207,6 @@ public class RoundController
         {
             // Código de calentamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
-            // if (tiempoEncendido > 50)
-            // {
-            //     tiempoEncendido = SigmoidInt(tiempoEncendido);
-            // }
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 CALENTANDO: Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
