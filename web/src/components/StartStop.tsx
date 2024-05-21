@@ -25,8 +25,8 @@ export default function StartStop() {
             <Button
                 onClick={async () => {
 
-                    // Handle start
-                    handleStart();
+                    // Handle stop
+                    handleStop();
 
                     const controller = new AbortController();
                     const timeout = Math.round(displayRefreshRate * 2 / 3)
@@ -55,9 +55,9 @@ export default function StartStop() {
             </Button>
             <Button
                 onClick={async () => {
-
-                    // Handle stop
-                    handleStop();
+                    
+                    // Handle start
+                    handleStart();
 
                     const controller = new AbortController();
                     // const timeout = Math.round(displayRefreshRate * 2 / 3)

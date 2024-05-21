@@ -182,7 +182,7 @@ const Inputs = () => {
       <div style={{ margin: '20px 0', background: 'white', height: '2px', gridColumn: "span 2" }}></div>
 
       <span className="col-start-1">
-        Internal rate (ms):
+        Meadow measures rate (ms):
       </span>
       <input
         type="number"
@@ -193,7 +193,7 @@ const Inputs = () => {
       />
 
       <span className="col-start-1">
-        Display Refresh rate (ms):
+        Graph fetch rate (ms):
       </span>
       <input
         type="number"
