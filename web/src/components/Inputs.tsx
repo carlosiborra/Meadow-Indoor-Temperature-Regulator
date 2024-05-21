@@ -42,67 +42,39 @@ const Inputs = () => {
     const entries = [minTemperature, maxTemperature, roundDuration];
     const allSameLength = new Set(entries.map(entry => entry.split(';').filter(Boolean).length)).size === 1;
 
+    let description = ''
+
     if (!minValid) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'La temperatura mínima no tiene un formato válido'
-      })
-      return false;
-    } if (!maxValid) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'La temperatura máxima no tiene un formato válido'
-      })
-      return false;
-    } if (!roundValid) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'Los números de ronda no tienen un formato válido',
-      })
-      return false;
-    } if (!allSameLength) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'Las 3 primeras entradas deben tener la misma cantidad de valores',
-      })
-      return false;
-    } if (!allTempsValid) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'Las temperaturas no son válidas, recuerda que la temperatura mínima debe ser menor a la máxima.',
-      })
-      return false;
+      description = 'La temperatura mínima no tiene un formato válido'
+    } else if (!maxValid) {
+      description = 'La temperatura máxima no tiene un formato válido'
+    } else if (!roundValid) {
+      description = 'Los números de ronda no tienen un formato válido'
+    } else if (!allSameLength) {
+      description = 'Las 3 primeras entradas deben tener la misma cantidad de valores'
+    } else if (!allTempsValid) {
+      description = 'Las temperaturas no son válidas, recuerda que la temperatura mínima debe ser menor a la máxima.'
+    } else if (parseInt(internalRate) < 1) {
+      description = 'La tasa interna debe ser mayor a 0'
+    } else if (parseInt(refreshRate) < 200) {
+      description = 'La tasa de refresco debe ser un mayor que 200'
+    } else {
+      return true;
     }
-    if (parseInt(internalRate) < 1) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'La tasa interna debe ser mayor a 0',
-      })
-      return false;
-    }
-    if (parseInt(refreshRate) < 200) {
-      toast({
-        title: 'Error',
-        variant: 'destructive',
-        description: 'La tasa de refresco debe ser un mayor que 200',
-      })
-      return false;
-    }
-    return true;
+    toast({
+      title: 'Error',
+      variant: 'destructive',
+      description
+    })
+    return false;
   };
 
   async function setParams(): Promise<void> {
     if (validateInputs()) {
       displayRefreshRateStore.set(parseInt(refreshRate));
-      
+
       const password = localStorage.getItem('password') ?? ''
-      
+
       // Note: data is passed as str and the backed does the transformation
       const params = {
         pass: password,

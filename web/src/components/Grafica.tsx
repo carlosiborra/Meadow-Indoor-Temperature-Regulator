@@ -19,8 +19,9 @@ const N_DATA = 500;
 
 export default function Grafica() {
     const displayRefreshRate = useStore(displayRefreshRateStore);
-    const data = useStore(dataStore);
+    const _data = useStore(dataStore);
     const fetchStatus = useStore(fetchStatusStore); // Get fetch status
+    const [data, setData] = useState<Data[]>([]);
 
     useEffect(() => {
         console.log(`Base url: ${PUBLIC_BASE_URL}`);
@@ -50,7 +51,8 @@ export default function Grafica() {
                         timestamp: body.timestamp[i],
                     } satisfies Data);
                 }
-                dataStore.set(new_data.slice(-N_DATA));
+                dataStore.set([...dataStore.get(), ...new_data]);
+                setData(dataStore.get().slice(-N_DATA));
             } catch (error) {
                 console.warn(`No se pudo recibir los datos del servidor; Elapsed: ${Date.now() - start}ms`);
             }
