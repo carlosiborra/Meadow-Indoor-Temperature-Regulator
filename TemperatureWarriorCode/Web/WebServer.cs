@@ -14,6 +14,8 @@ using Meadow.Peripherals.Displays;
 using System.Collections.Specialized;
 using System.IO;
 using System.Text.Json;
+using NETDuinoWar;
+
 namespace TemperatureWarriorCode.Web
 {
     public class WebServer

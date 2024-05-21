@@ -3,8 +3,9 @@ using System.Diagnostics;
 using Meadow.Foundation.Relays;
 using System.Threading;
 using TemperatureWarriorCode;
+using NETDuinoWar;
 using System.Runtime.InteropServices;
-
+using System.Xml.Schema;
 
 public class RoundController
 {
@@ -15,6 +16,21 @@ public class RoundController
 
     private Relay relayBombilla;
     private Relay relayPlaca;
+
+    //Time Controller Values
+    public static int total_time_in_range = 0;
+    public static int total_time_out_of_range = 0;
+
+    private static readonly double max_allowed_temp = 55.0; // In ºC
+    private static readonly double max_temp_comp = 38.0; // In ºC
+    private static readonly double min_temp_comp = 12.0; // In ºC
+
+    static int SigmoidInt(int x)
+    {
+        x = x / 100;
+        double result = 1 / (1 + Math.Exp(-x));
+        return (int)Math.Round(result*100);
+    }
 
     public bool Configure(TemperatureRange[] ranges, int total, int refresh, Relay relayBombilla, Relay relayPlaca, out string errorMessage)
     {
@@ -48,7 +64,21 @@ public class RoundController
         return true;
     }
 
-    public void StartOperation()
+    public double CheckTemperature(double temperature)
+    {
+        if (temperature > max_allowed_temp)
+        {
+            throw new ArgumentException($"Max temperature should be less than {max_allowed_temp}ºC.");
+        }
+
+        if (temperature < min_temp_comp || temperature > max_temp_comp)
+        {
+            throw new ArgumentException($"Temperature range should be between {min_temp_comp}ºC and {max_temp_comp}ºC.");
+        }
+        return temperature;
+    }
+
+    public void StartOperation(TimeController timeController, int total_time)
     {
         Console.WriteLine("Starting the operations (PID and relayController)...");
         // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
@@ -60,59 +90,90 @@ public class RoundController
 
         pidController.Reset(); // Reset the PID controller
 
-        Stopwatch stopwatch = new Stopwatch(); // Create a stopwatch to measure the time elapsed
+        // Inicializamos una variable de condición
+        ManualResetEventSlim condicion = new ManualResetEventSlim(false);
+
+        // Se lanza un hilo que esté continuamente calculando la salida del control PID
+        Thread thread = new Thread(() =>
+        {
+            Console.WriteLine("Esperando a recibir una señal...");
+            condicion.Wait(); // El hilo espera en la condición
+            Console.WriteLine("Señal recibida");
+
+            while (true)
+            {
+                //Console.WriteLine("Calculando OUTPUT DEL PID");
+                // Calcular la salida del control PID
+                pidController.Compute(Data.targetTemperature);
+                // Obtener la salida del control PID
+                int output = (int)Data.output;
+                //Console.WriteLine($"Output: {output}");
+                //Console.WriteLine("PID Output: " + output);
+                Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
+                timeController.RegisterTemperature(Convert.ToDouble(Data.temp_act));
+                Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temperaturaMaxima));
+                Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temperaturaMinima));
+                Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                //Console.WriteLine("Valores añadidos a la lista");
+                // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
+                Thread.Sleep(Data.refresh);
+            }
+        });
+        // Iniciamos el hilo de cálculo del control PID
+        thread.Start();
+
+        Stopwatch stopwatch = new Stopwatch(); // Create a stopwatch to measure the time elapsed       
 
         // For each temperature range, run the PID controller until the specified duration is reached
         for (int i = 0; i < temperatureRanges.Length; i++)
         {
-            double targetTemperature = (temperatureRanges[i].Min + temperatureRanges[i].Max) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
+            Console.WriteLine($"Range: {i}");
+            Console.WriteLine("Inicializando temperaturas maxima minima y objetivo");
+            Data.targetTemperature = (temperatureRanges[i].MinTemp + temperatureRanges[i].MaxTemp) / 2.0; // Calculate the target temperature as the average of the minimum and maximum temperature of the range
+            Data.temperaturaMaxima = temperatureRanges[i].MaxTemp;
+            Data.temperaturaMinima = temperatureRanges[i].MinTemp;
+            Console.WriteLine($"temp act: {Data.temp_act}");
+            Data.temp_structure.temperatures.Add(double.Parse(Data.temp_act));
+            condicion.Set();
+            //Console.WriteLine("Variable de condicion activada");
+
             stopwatch.Start(); // Start the stopwatch
 
-            // Se lanza un hilo que esté continuamente calculando la salida del control PID
-            Thread thread = new Thread(() =>
-            {
-                while (true)
-                {
-                    // Calcular la salida del control PID
-                    pidController.Compute(targetTemperature);
-                    // Obtener la salida del control PID
-                    int output = (int)Data.output;
-                    //Console.WriteLine("PID Output: " + output);
-                    Data.temp_structure.temperatures.Add(Convert.ToDouble(Data.temp_act));
-                    Data.temp_structure.temp_max.Add(Convert.ToDouble(Data.temp_max[i]));
-                    Data.temp_structure.temp_min.Add(Convert.ToDouble(Data.temp_min[i]));
-                    Data.temp_structure.timestamp.Add(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                    // Esperar un tiempo antes de volver a calcular del tiempo que tarda el sensor en actualizar la temperatura.
-                    Thread.Sleep(Data.refresh);
-                }
-            });
-            // Iniciamos el hilo de cálculo del control PID
-            thread.Start();
-
             // Se activa / desactiva el relay de la bombilla y la placa de Peltier según la salida del control PID
-            while (stopwatch.ElapsedMilliseconds  < temperatureRanges[i].Duration)
+            while (stopwatch.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
             {
-                Console.WriteLine($"Target temperature: {targetTemperature}");
-                Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.ElapsedMilliseconds  }");
-                Console.WriteLine($"temperatureRanges[i].Duration: {temperatureRanges[i].Duration }");
+                //Console.WriteLine($"Target temperature: {Data.targetTemperature}");
+                //Console.WriteLine($"stopwatch.Elapsed.Milliseconds: {stopwatch.ElapsedMilliseconds}");
+                //Console.WriteLine($"temperatureRanges[i].Duration: {temperatureRanges[i].RangeTimeInMilliseconds }");
                 // TODO: Adapt the parameters of the ControlarRelay method to the specific system requirements.
                 ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 1000); // Applying the PID controller output to the system.
             }
-            Console.WriteLine("Siguiente Range");
             pidController.Reset();
             stopwatch.Stop();
             stopwatch.Reset();
         }
+        total_time_in_range += timeController.TimeInRangeInMilliseconds;
+        total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
+        Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
+
+        Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
+        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+        Console.WriteLine($"Debug Output :{timeController.LastRegisterTempDebug}");
+        Console.WriteLine("RONDA TERMINADA");
     }
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
     {
-        Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
+        //Console.WriteLine("Intensidad: {0}, IntensityBreakpoint: {1}, Periodo: {2}", intensidad, intensityBreakpoint, periodoTiempo);
         
         if (intensidad <= intensityBreakpoint)
         {
             // Código de enfriamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
+            if (tiempoEncendido > 50)
+            {
+                tiempoEncendido = SigmoidInt(tiempoEncendido);
+            }
             relayPlaca.IsOn = true;
             relayBombilla.IsOn = false;
             Console.WriteLine("❄️ Enfriando: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
@@ -124,6 +185,10 @@ public class RoundController
         {
             // Código de calentamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
+            if (tiempoEncendido > 50)
+            {
+                tiempoEncendido = SigmoidInt(tiempoEncendido);
+            }
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Console.WriteLine("🔥 Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);

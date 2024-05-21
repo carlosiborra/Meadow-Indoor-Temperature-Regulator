@@ -24,6 +24,9 @@ namespace TemperatureWarriorCode
         public static int time_left; // in s
         public static int time_in_range_temp = 0; //In ms.
         public static bool next_range = false;
+        public static double targetTemperature = 0.0;
+        public static double temperaturaMaxima = 0.0;
+        public static double temperaturaMinima = 0.0;
 
         //COLORS FOR DISPLAY
         public static Color[] colors = new Color[4]

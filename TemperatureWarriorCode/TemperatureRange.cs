@@ -1,6 +1,6 @@
 using System;
 
-public class TemperatureRange
+public class TemperatureRange_nuestra
 {
     public double Min { get; set; }
     public double Max { get; set; }
@@ -11,7 +11,7 @@ public class TemperatureRange
     private static readonly double min_temp_comp = 12.0; // In ºC
 
 
-    public TemperatureRange(double min, double max, int duration)
+    public TemperatureRange_nuestra(double min, double max, int duration)
     {
         
         if (min >= max)
