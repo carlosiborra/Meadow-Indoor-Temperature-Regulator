@@ -89,9 +89,9 @@ public class RoundController
         Integral Gain (ki): Increasing the integral gain helps eliminate steady-state error, but too high a ki can cause the system to respond too aggressively, leading to overshooting and instability.
         Derivative Gain (kd): Increasing the derivative gain can help dampen the response and reduce overshooting by predicting future errors based on the rate of change. However, too high a kd can make the system overly sensitive to noise.
         */
-        double kp = 0.9;  // Increased for faster response
-        double ki = 0.2;  // Keep same, or adjust based on system response
-        double kd = 0.003; // Increased to help dampen the response
+        double kp = 1.0;
+        double ki = 0.4;
+        double kd = 0.007;
 
         // Create a PID controller with the specified gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
         pidController = new PIDController(kp, ki, kd);
@@ -179,10 +179,10 @@ public class RoundController
         total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
         Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
 
-        Console.WriteLine("\nTiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time / 1000 + " s");
+        Console.WriteLine("\n\nTiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time / 1000 + " s");
         Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time / 1000 + " s");
         Console.WriteLine($"Debug Output :{timeController.LastRegisterTempDebug}");
-        Console.WriteLine("RONDA TERMINADA\n");
+        Console.WriteLine("RONDA TERMINADA\n\n");
     }
 
     private void ControlarRelay(Relay relayBombilla, Relay relayPlaca, int intensidad, int intensityBreakpoint, int periodoTiempo)
@@ -193,13 +193,13 @@ public class RoundController
         {
             // Código de enfriamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / (-100);
-            relayPlaca.IsOn = true;
-            relayBombilla.IsOn = false;
             Console.WriteLine("❄️ ENFRIANDO: Tiempo encendido del sistema de enfriamiento (peltier): {0}", tiempoEncendido);
+            relayPlaca.IsOn = false;
+            relayBombilla.IsOn = true;
             Thread.Sleep(tiempoEncendido);
             if(tiempoEncendido !=  periodoTiempo)
             {
-                relayPlaca.IsOn = false;
+                relayPlaca.IsOn = true;
             }
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }
@@ -207,13 +207,13 @@ public class RoundController
         {
             // Código de calentamiento
             int tiempoEncendido = (intensidad - intensityBreakpoint) * 100 / (120 - intensityBreakpoint) * periodoTiempo / 100;
-            relayPlaca.IsOn = false;
-            relayBombilla.IsOn = true;
             Console.WriteLine("🔥 CALENTANDO: Tiempo encendido del sistema de calentamiento (bombilla): {0}", tiempoEncendido);
+            relayPlaca.IsOn = true;
+            relayBombilla.IsOn = false;
             Thread.Sleep(tiempoEncendido);
             if(tiempoEncendido !=  periodoTiempo)
             {
-                relayBombilla.IsOn = false;
+                relayBombilla.IsOn = true;
             }
             Thread.Sleep(periodoTiempo - tiempoEncendido);
         }

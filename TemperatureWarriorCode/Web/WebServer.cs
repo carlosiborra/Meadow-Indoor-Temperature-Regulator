@@ -24,7 +24,6 @@ namespace TemperatureWarriorCode.Web
         private int _port = -1;
         public bool _runServer = true;
         private static HttpListener _listener;
-        private static int _pageViews = 0;
         private static int _requestCount = 0;
         private static bool ready = false;
         private static readonly string pass = "pass";
@@ -103,7 +102,7 @@ namespace TemperatureWarriorCode.Web
                 {
                     case "/shutdown" when req.HttpMethod == "POST":
                         Console.WriteLine("Shutdown requested");
-                        _runServer = false;
+                        Stop();
                         message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"message\":\"Server shutting down.\"}}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";

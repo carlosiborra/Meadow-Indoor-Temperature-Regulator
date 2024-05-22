@@ -111,8 +111,8 @@ namespace TemperatureWarriorCode
             TimeController timeController = new TimeController();
 
             // Initialize relays
-            Relay relayBombilla = InstantiateRelay(Device.Pins.D02, initialValue: false);
-            Relay relayPlaca = InstantiateRelay(Device.Pins.D03, initialValue: false);
+            Relay relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: false);
+            Relay relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: false);
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
@@ -187,34 +187,6 @@ namespace TemperatureWarriorCode
             Console.WriteLine("Reloj finalizado");
         }
 
-
-        /*
-        ESTE CODIGO NOS LO DAN, LO DEJO DE MOMENTO POR SI NOS ES UTIL EN EL FUTURO
-        Console.WriteLine("STARTING");
-
-        //THE TW START WORKING
-        while (Data.is_working) {
-
-            //This is the time refresh we did not do before
-            Thread.Sleep(Data.refresh - sleep_time);
-
-            //Temperature registration
-            Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-            RoundController.RegisterTemperature(double.Parse(Data.temp_act));
-            regTempTimer.Restart();
-
-        }
-        Console.WriteLine("Round Finish");
-        t.Abort();
-
-        total_time_in_range += RoundController.TimeInRangeInMilliseconds;
-        total_time_out_of_range += RoundController.TimeOutOfRangeInMilliseconds;
-        Data.time_in_range_temp = (RoundController.TimeInRangeInMilliseconds / 1000);
-
-        Console.WriteLine("Tiempo dentro del rango " + (((double)RoundController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
-        */
-
         #region Relay
         private static Relay InstantiateRelay(IPin thePin, bool initialValue)
         {
@@ -223,9 +195,6 @@ namespace TemperatureWarriorCode
             return theRelay;
         }
         #endregion
-
-
-
 
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
@@ -247,7 +216,7 @@ namespace TemperatureWarriorCode
                 }
 
                 // Check if the new temperature is an outlier
-                if (temp_new < prev_temp - 15.00 || temp_new > prev_temp + 15.00)
+                if (temp_new < prev_temp - 10.00 || temp_new > prev_temp + 10.00)
                 {
                     // Increment the count of contiguous outliers
                     if (++contiguous_outliers < 3)
