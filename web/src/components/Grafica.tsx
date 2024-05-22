@@ -19,7 +19,6 @@ const N_DATA = 500;
 
 export default function Grafica() {
     const displayRefreshRate = useStore(displayRefreshRateStore);
-    const _data = useStore(dataStore);
     const fetchStatus = useStore(fetchStatusStore); // Get fetch status
     const [data, setData] = useState<Data[]>([]);
 
