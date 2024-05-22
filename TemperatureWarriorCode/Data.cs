@@ -30,15 +30,6 @@ namespace TemperatureWarriorCode
         public static double temperaturaMaxima = 0.0;
         public static double temperaturaMinima = 0.0;
 
-        //COLORS FOR DISPLAY
-        public static Color[] colors = new Color[4]
-        {
-            Color.FromHex("#67E667"),
-            Color.FromHex("#00CC00"),
-            Color.FromHex("#269926"),
-            Color.FromHex("#008500")
-        };
-        
         public static temp_info temp_structure = new temp_info();
         
 

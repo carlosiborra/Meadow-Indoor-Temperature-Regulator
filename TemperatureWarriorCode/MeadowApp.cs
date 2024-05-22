@@ -18,21 +18,18 @@ using NETDuinoWar;
 using Meadow.Foundation.Relays;
 using System.Text.RegularExpressions;
 using System.Net;
+using System.Collections.Generic;
 
 namespace TemperatureWarriorCode
 {
     public class MeadowApp : App<F7FeatherV2>
-
     {
-
-        //Temperature Sensor
+        // Temperature Sensor
         AnalogTemperature sensor;
-
-        //Time Controller Values
+        // Time Controller Values
         public static int total_time = 0;
 
         public WebServer webServer;
-
         public static TimeController timeController;
 
         // Relays
@@ -42,6 +39,11 @@ namespace TemperatureWarriorCode
         public int count = 0;
         public bool start = true;
         public int contiguous_outliers = 0;
+
+        // Moving average filter parameters
+        private Queue<double> temperatureReadings = new Queue<double>();
+        private const int MaxReadings = 4; // Number of readings to average
+
         public override async Task Run()
         {
             if (count == 0)
@@ -52,27 +54,24 @@ namespace TemperatureWarriorCode
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
 
-                // TODO Modify this value according to the needs of the project
-                sensor.StartUpdating(TimeSpan.FromSeconds(2)); // Start updating the temperature every 2 seconds. In our case, we need to decide the time to update the temperature. We could use a lower value to get more accurate results and obtain an average of the temperature deleting outliers.
+                sensor.StartUpdating(TimeSpan.FromMilliseconds(250));
 
-                // TODO Local Network configuration (uncomment when needed)
+                // Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
                 wifi.NetworkConnected += WiFiAdapter_ConnectionCompleted;
 
                 WifiNetwork wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
                 while (wifiNetwork == null)
                 {
-                    //WiFi Channel
+                    // WiFi Channel
                     wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
-                    Console.WriteLine("No encuentro redes");
+                    Console.WriteLine("No networks found");
                 }
                 Console.WriteLine($"Wifi Networks: {wifiNetwork}");
                 wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
                 await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
 
-                // Use wifi.IpAddress.ToString() instead of a placeholder IP
                 string ipAddressString = wifi.IpAddress.ToString();
-                //string ipAddressString = "127.0.0.1";
 
                 // Display the IP address
                 Console.WriteLine($"IP Address: {ipAddressString}:{Data.Port}");
@@ -86,7 +85,7 @@ namespace TemperatureWarriorCode
                     IPAddress ipAddress = IPAddress.Parse(ipAddressString);
 
                     // Pass the IPAddress object to the WebServer constructor
-                    WebServer webServer = new WebServer(ipAddress, Data.Port);
+                    webServer = new WebServer(ipAddress, Data.Port);
                     if (webServer != null)
                     {
                         webServer.Start();
@@ -95,12 +94,11 @@ namespace TemperatureWarriorCode
 
                 Console.WriteLine("Meadow Initialized!");
 
-                count = count + 1;
+                count++;
             }
         }
 
-
-        //TW Combat Round
+        // TW Combat Round
         public static async Task StartRoundAsync()
         {
             Stopwatch timer = Stopwatch.StartNew();
@@ -108,15 +106,15 @@ namespace TemperatureWarriorCode
 
             // Initialize the round controller
             var roundController = new RoundController();
-            TimeController timeController = new TimeController();
+            timeController = new TimeController();
 
             // Initialize relays
-            Relay relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: false);
-            Relay relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: false);
+            relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: false);
+            relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: false);
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
-            int total_time = 0;
+            total_time = 0;
 
             Data.is_working = true;
             for (int i = 0; i < Data.temp_min.Length; i++)
@@ -166,12 +164,12 @@ namespace TemperatureWarriorCode
             }
         }
 
-        //Round Timer
+        // Round Timer
         private static async Task TimerAsync()
         {
             Data.is_working = true;
-            Console.WriteLine($"Hilo iniciado");
-            for (int i = 0; i < Data.round_time.Length; i++)
+            Console.WriteLine($"Timer started");
+            for (int i = 0; Data.round_time != null && i < Data.round_time.Length; i++)
             {
                 Data.time_left = int.Parse(Data.round_time[i]);
                 Console.WriteLine($"{Data.time_left} seconds left");
@@ -184,7 +182,7 @@ namespace TemperatureWarriorCode
                 Data.next_range = true;
             }
             Data.is_working = false;
-            Console.WriteLine("Reloj finalizado");
+            Console.WriteLine("Timer finished");
         }
 
         #region Relay
@@ -196,11 +194,21 @@ namespace TemperatureWarriorCode
         }
         #endregion
 
-        //Temperature and Display Updated
+        // Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
             // Round the new temperature to 2 decimal places
-            var temp_new = Math.Round((double)e.New.Celsius, 2);
+            var temp_new = (double)e.New.Celsius;
+
+            // Add the new temperature to the queue
+            temperatureReadings.Enqueue(temp_new);
+            if (temperatureReadings.Count > MaxReadings)
+            {
+                temperatureReadings.Dequeue();
+            }
+
+            // Calculate the average temperature
+            var avg_temp = Math.Round(temperatureReadings.Average(), 1);
 
             // Only check for outliers if start is false (not the first reading)
             if (!start)
@@ -208,20 +216,20 @@ namespace TemperatureWarriorCode
                 // Parse previous temperature
                 var prev_temp = Convert.ToDouble(Data.temp_act);
 
-                // Shutwdown when extreme temperatures or sensor disconnection are detected
-                if (temp_new > RoundController.max_allowed_temp || temp_new < RoundController.min_allowed_temp)
+                // Shut down when extreme temperatures or sensor disconnection are detected
+                if (avg_temp > RoundController.max_allowed_temp)  //  || avg_temp < RoundController.min_allowed_temp
                 {
                     Console.WriteLine("Shutdown requested");
                     webServer.Stop();
                 }
 
                 // Check if the new temperature is an outlier
-                if (temp_new < prev_temp - 10.00 || temp_new > prev_temp + 10.00)
+                if (avg_temp < prev_temp - 5.00 || avg_temp > prev_temp + 5.00)
                 {
                     // Increment the count of contiguous outliers
                     if (++contiguous_outliers < 3)
                     {
-                        Console.WriteLine($"Current temperature (outlier): {Data.temp_act}");
+                        Console.WriteLine($"Current temperature (outlier): {avg_temp}");
                         return;
                     }
                 }
@@ -233,11 +241,10 @@ namespace TemperatureWarriorCode
             }
 
             // Update and print the new temperature
-            Data.temp_act = temp_new.ToString();
+            Data.temp_act = avg_temp.ToString();
             start = false;
             Console.WriteLine($"Current temperature: {Data.temp_act}");
         }
-
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
         {
