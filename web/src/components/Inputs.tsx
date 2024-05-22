@@ -27,7 +27,7 @@ const Inputs = () => {
       return false;
     }
 
-    const tempValidFormat = /^(1[2-9]|2[0-9]|30)(;(1[2-9]|2[0-9]|30))*$/; // Números del 12 al 30 seguidos de ';'
+    const tempValidFormat = /^(1[2-9](\.\d)?|2[0-9](\.\d)?|30(\.0)?)(;(1[2-9](\.\d)?|2[0-9](\.\d)?|30(\.0)?))*$/; // Números del 12 al 30 seguidos de ';'
     const genericValidFormat = /^\d+(;\d+)*$/; // Cualquier número seguido de ';'
 
     const minValid = tempValidFormat.test(minTemperature);

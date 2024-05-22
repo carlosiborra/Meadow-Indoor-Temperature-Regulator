@@ -63,6 +63,8 @@ export default function Grafica() {
             intervalId = setInterval(fetchData, displayRefreshRate);
         } else if (fetchStatus === 'stop') {
             clearInterval(intervalId);
+            // Cleat the graph
+            dataStore.set([]);
         }
 
         return () => clearInterval(intervalId);

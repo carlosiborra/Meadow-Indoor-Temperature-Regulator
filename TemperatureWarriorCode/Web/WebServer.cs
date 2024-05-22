@@ -75,6 +75,8 @@ namespace TemperatureWarriorCode.Web
         public void Stop()
         {
             _runServer = false;
+            MeadowApp.relayBombilla.IsOn = true;
+            MeadowApp.relayPlaca.IsOn = true;
         }
 
         public async Task HandleIncomingConnections(HttpListenerContext ctx)
@@ -191,6 +193,14 @@ namespace TemperatureWarriorCode.Web
                             Data.temp_structure.timestamp.Clear();
                         }
 
+                        break;
+                    
+                    case "/round_info" when req.HttpMethod == "GET":
+                        Console.WriteLine("Retrieve round info");
+
+                        resp.StatusCode = 200;
+                        resp.StatusDescription = "OK";
+                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"time_in_range\":\"\"}}";
                         break;
 
                     default:

@@ -42,7 +42,7 @@ namespace TemperatureWarriorCode
 
         // Moving average filter parameters
         private Queue<double> temperatureReadings = new Queue<double>();
-        private const int MaxReadings = 4; // Number of readings to average
+        private const int MaxReadings = 10; // Number of readings to average
 
         public override async Task Run()
         {
@@ -54,7 +54,7 @@ namespace TemperatureWarriorCode
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
 
-                sensor.StartUpdating(TimeSpan.FromMilliseconds(250));
+                sensor.StartUpdating(TimeSpan.FromMilliseconds(200));  // The sensor will update every 250ms
 
                 // Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -206,6 +206,9 @@ namespace TemperatureWarriorCode
             {
                 temperatureReadings.Dequeue();
             }
+
+            // Printe queue
+            //Console.WriteLine($"Temperature readings: {string.Join(", ", temperatureReadings)}");
 
             // Calculate the average temperature
             var avg_temp = Math.Round(temperatureReadings.Average(), 1);
