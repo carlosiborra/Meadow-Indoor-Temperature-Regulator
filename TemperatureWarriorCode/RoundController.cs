@@ -84,7 +84,7 @@ public class RoundController
         Console.WriteLine("Starting the operations (PID and relayController)...");
 
         double kp = 9.0;
-        double ki = 0.1;
+        double ki = 0.12;
         double kd = 0.09;
 
         pidController = new PIDController(kp, ki, kd);
