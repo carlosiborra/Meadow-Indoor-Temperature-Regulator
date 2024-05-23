@@ -42,7 +42,7 @@ namespace TemperatureWarriorCode
 
         // Moving average filter parameters
         private Queue<double> temperatureReadings = new Queue<double>();
-        private const int MaxReadings = 10; // Number of readings to average
+        private const int MaxReadings = 8; // Number of readings to average
 
         public override async Task Run()
         {
@@ -92,7 +92,7 @@ namespace TemperatureWarriorCode
                     }
                 }
 
-                Console.WriteLine("Meadow Initialized!");
+                Console.WriteLine("Meadow Initialized - MODO CONFIGURACIÓN");
 
                 count++;
             }
@@ -109,8 +109,8 @@ namespace TemperatureWarriorCode
             timeController = new TimeController();
 
             // Initialize relays
-            relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: false);
-            relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: false);
+            relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: true);
+            relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: true);
 
             // Configure temperature ranges for the round
             TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
@@ -198,7 +198,7 @@ namespace TemperatureWarriorCode
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
             // Round the new temperature to 2 decimal places
-            var temp_new = (double)e.New.Celsius;
+            var temp_new = Math.Round((double)e.New.Celsius, 1);
 
             // Add the new temperature to the queue
             temperatureReadings.Enqueue(temp_new);
@@ -208,7 +208,7 @@ namespace TemperatureWarriorCode
             }
 
             // Printe queue
-            //Console.WriteLine($"Temperature readings: {string.Join(", ", temperatureReadings)}");
+            Console.WriteLine($"Temperature readings: {string.Join(", ", temperatureReadings)}");
 
             // Calculate the average temperature
             var avg_temp = Math.Round(temperatureReadings.Average(), 1);
@@ -220,7 +220,7 @@ namespace TemperatureWarriorCode
                 var prev_temp = Convert.ToDouble(Data.temp_act);
 
                 // Shut down when extreme temperatures or sensor disconnection are detected
-                if (avg_temp > RoundController.max_allowed_temp)  //  || avg_temp < RoundController.min_allowed_temp
+                if (avg_temp > RoundController.max_allowed_temp || avg_temp < RoundController.min_allowed_temp)  //  || avg_temp < RoundController.min_allowed_temp
                 {
                     Console.WriteLine("Shutdown requested");
                     webServer.Stop();

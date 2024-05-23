@@ -83,26 +83,16 @@ public class RoundController
     {
         Console.WriteLine("Starting the operations (PID and relayController)...");
 
-        // Define the PID controller gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
-        /*
-        Proportional Gain (kp): Increasing the proportional gain will generally make the controller respond faster to errors. However, too high a kp can cause the system to become unstable and oscillate.
-        Integral Gain (ki): Increasing the integral gain helps eliminate steady-state error, but too high a ki can cause the system to respond too aggressively, leading to overshooting and instability.
-        Derivative Gain (kd): Increasing the derivative gain can help dampen the response and reduce overshooting by predicting future errors based on the rate of change. However, too high a kd can make the system overly sensitive to noise.
-        */
+        double kp = 9.0;
+        double ki = 0.1;
+        double kd = 0.09;
 
-        double kp = 0.8;
-        double ki = 0.15;
-        double kd = 0.1;
-
-        // Create a PID controller with the specified gains (kp, ki, kd). TODO: The gains should be tuned based on the system requirements.
         pidController = new PIDController(kp, ki, kd);
         pidController.Reset(); // Reset the PID controller
 
         // Inicializamos una variable de condición
         ManualResetEventSlim condicion = new ManualResetEventSlim(false);
         ManualResetEventSlim condicion_PID = new ManualResetEventSlim(false);
-
-
 
         // Use ThreadPool to manage thread creation
         ThreadPool.QueueUserWorkItem(_ =>
@@ -169,7 +159,7 @@ public class RoundController
 
             while (stopwatch.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
             {
-                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 5000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 3000); // Applying the PID controller output to the system.
             }
             pidController.Reset();
             stopwatch.Stop();
@@ -198,7 +188,7 @@ public class RoundController
             relayPlaca.IsOn = false;
             relayBombilla.IsOn = true;
             Thread.Sleep(tiempoEncendido);
-            if(tiempoEncendido !=  periodoTiempo)
+            if(tiempoEncendido != periodoTiempo)
             {
                 relayPlaca.IsOn = true;
             }

@@ -77,6 +77,8 @@ namespace TemperatureWarriorCode.Web
             _runServer = false;
             MeadowApp.relayBombilla.IsOn = true;
             MeadowApp.relayPlaca.IsOn = true;
+            // Exit the application
+            Environment.Exit(0);
         }
 
         public async Task HandleIncomingConnections(HttpListenerContext ctx)
@@ -104,14 +106,16 @@ namespace TemperatureWarriorCode.Web
                 {
                     case "/shutdown" when req.HttpMethod == "POST":
                         Console.WriteLine("Shutdown requested");
-                        Stop();
                         message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"message\":\"Server shutting down.\"}}";
                         resp.StatusCode = 200;
                         resp.StatusDescription = "OK";
+                        // Once response is sent, stop the server
+                        Stop();
                         break;
 
                     case "/setparams" when req.HttpMethod == "POST":
-                        Console.WriteLine("Setting parameters");
+                        Console.WriteLine("\nSetting parameters - MODO PREPARADO\n");
+
                         using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
                         {
                             var jsonBody = await reader.ReadToEndAsync();
@@ -156,7 +160,7 @@ namespace TemperatureWarriorCode.Web
                         break;
 
                     case "/start" when req.HttpMethod == "GET":
-                        Console.WriteLine("Starting round");
+                        Console.WriteLine("\nStarting round - MODO COMBATE\n");
 
                         // Run the round operation asynchronously
                         _ = Task.Run(async () =>
