@@ -23,11 +23,10 @@ export default function StartStop() {
     dataStore.set([]);
     setIsRunning(true);
     const response = await startRonda();
-    if (response) {
-    }
+    setCurrentRound(0);
 };
 
-const handleStop = async () => {
+  const handleStop = async () => {
     fetchStatusStore.set('stop');
     await fetch(`/api/download`, {
       method: 'POST',
@@ -54,9 +53,10 @@ const handleStop = async () => {
             title: 'Ok',
             description: 'Ronda iniciada correctamente',
         });
-        setGlobalTimeLeft(roundDurations.reduce((acc, curr) => acc + curr, 0) * 10);
+        const globalDuration = roundDurations.reduce((acc, curr) => acc + curr, 0) * 10;
+        setGlobalTimeLeft(globalDuration);
+        console.log(`Round durations: ${roundDurations}`);
         setRoundTimeLeft(roundDurations[0] * 10);
-        setCurrentRound(0);
         return true;
     } catch {
       toast({
@@ -98,7 +98,6 @@ const handleStop = async () => {
 
     if (isRunning) {
       globalInterval = setInterval(() => {
-        console.log(globalTimeLeft);
         setGlobalTimeLeft((prev) => Math.max(prev - 1, 0));
       }, 100);
 

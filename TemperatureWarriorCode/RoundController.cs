@@ -159,7 +159,7 @@ public class RoundController
 
             while (stopwatch.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
             {
-                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 3000); // Applying the PID controller output to the system.
+                ControlarRelay(relayBombilla, relayPlaca, (int)Data.output, 60, 2000); // Applying the PID controller output to the system.
             }
             pidController.Reset();
             stopwatch.Stop();
