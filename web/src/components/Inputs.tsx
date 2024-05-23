@@ -1,10 +1,11 @@
+// input.tsx
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useToast } from './ui/use-toast';
 import Button from './Button';
 import { useStore } from '@nanostores/react';
 import { displayRefreshRateStore } from '@/stores/displayRefreshRateStore';
-
+import { roundDurationStore } from '@/stores/roundDurationStore'; // New store
 
 const Inputs = () => {
   const [minTemperature, setMinTemperature] = useState('');
@@ -12,10 +13,10 @@ const Inputs = () => {
   const [roundDuration, setRoundDuration] = useState('');
   const [internalRate, setInternalRate] = useState('');
   const [refreshRate, setRefreshRate] = useState('');
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const displayRefreshRate = useStore(displayRefreshRateStore);
-  const PUBLIC_BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const PUBLIC_BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000';
 
   function validateInputs(): boolean {
     if (!minTemperature || !maxTemperature || !roundDuration || !internalRate || !refreshRate) {
@@ -23,7 +24,7 @@ const Inputs = () => {
         title: 'Error',
         variant: 'destructive',
         description: 'Todos los campos deben estar llenos',
-      })
+      });
       return false;
     }
 
@@ -42,38 +43,39 @@ const Inputs = () => {
     const entries = [minTemperature, maxTemperature, roundDuration];
     const allSameLength = new Set(entries.map(entry => entry.split(';').filter(Boolean).length)).size === 1;
 
-    let description = ''
+    let description = '';
 
     if (!minValid) {
-      description = 'La temperatura mínima no tiene un formato válido'
+      description = 'La temperatura mínima no tiene un formato válido';
     } else if (!maxValid) {
-      description = 'La temperatura máxima no tiene un formato válido'
+      description = 'La temperatura máxima no tiene un formato válido';
     } else if (!roundValid) {
-      description = 'Los números de ronda no tienen un formato válido'
+      description = 'Los números de ronda no tienen un formato válido';
     } else if (!allSameLength) {
-      description = 'Las 3 primeras entradas deben tener la misma cantidad de valores'
+      description = 'Las 3 primeras entradas deben tener la misma cantidad de valores';
     } else if (!allTempsValid) {
-      description = 'Las temperaturas no son válidas, recuerda que la temperatura mínima debe ser menor a la máxima.'
+      description = 'Las temperaturas no son válidas, recuerda que la temperatura mínima debe ser menor a la máxima.';
     } else if (parseInt(internalRate) < 1) {
-      description = 'La tasa interna debe ser mayor a 0'
+      description = 'La tasa interna debe ser mayor a 0';
     } else if (parseInt(refreshRate) < 200) {
-      description = 'La tasa de refresco debe ser un mayor que 200'
+      description = 'La tasa de refresco debe ser un mayor que 200';
     } else {
       return true;
     }
     toast({
       title: 'Error',
       variant: 'destructive',
-      description
-    })
+      description,
+    });
     return false;
-  };
+  }
 
   async function setParams(): Promise<void> {
     if (validateInputs()) {
       displayRefreshRateStore.set(parseInt(refreshRate));
+      roundDurationStore.set(roundDuration.split(';').map(Number)); // Store round duration
 
-      const password = localStorage.getItem('password') ?? ''
+      const password = localStorage.getItem('password') ?? '';
 
       // Note: data is passed as str and the backed does the transformation
       const params = {
@@ -85,9 +87,7 @@ const Inputs = () => {
       };
 
       const controller = new AbortController();
-      // const timeout = Math.round(displayRefreshRate * 2 / 3)
-      // const id = setTimeout(() => controller.abort(), timeout);
-      const start = Date.now()
+      const start = Date.now();
 
       try {
         const response = await fetch(`${PUBLIC_BASE_URL}/setparams`, {
@@ -96,7 +96,7 @@ const Inputs = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(params),
-          signal: controller.signal
+          signal: controller.signal,
         });
         if (!response.ok) {
           throw new Error('HTTP error ' + response.status);
@@ -110,8 +110,8 @@ const Inputs = () => {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: `No se pudo enviar los datos al servidor; Elaped: ${Date.now() - start}ms`
-        })
+          description: `No se pudo enviar los datos al servidor; Elapsed: ${Date.now() - start}ms`,
+        });
       }
     }
   }
