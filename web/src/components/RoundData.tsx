@@ -15,15 +15,32 @@ export default function RoundData() {
     return roundNumber === 0 ? (
         <></>
     ) : (
-        <div>
-            <h4>Ronda {roundNumber}</h4>
+        <div className="px-8 py-4 flex flex-col items-center justify-center w-full text-lg gap-4">
+            <h4 className="text-3xl text-fountain-blue-500">Ronda {roundNumber}</h4>
             <p>
-                <span>Duración total de la ronda:</span>
-                {roundDuration}s
+                <span className="font-bold">Duración total de la ronda: </span>
+                {roundDuration}s ({roundDuration*10}ds)
             </p>
             <p>
-                <span>Tiempo en el rango:</span>
-                <span>{timeInRange / 1000}s</span>/ {timeElapsed / 1000}s
+                <span className="font-bold">Tiempo en el rango: </span>
+                <span
+                    className={
+                        timeInRange / timeElapsed > 0.25 
+                            ? 'text-green-500'
+                            : timeInRange / timeElapsed > 0.12 
+                                ? 'text-yellow-500' 
+                                : 'text-guardsman-red-600'
+                    }
+                >{Math.round(timeInRange / 1000)}s</span> / {Math.round(timeElapsed / 1000)}s (
+                <span
+                    className={
+                        timeInRange / timeElapsed > 0.25 
+                            ? 'text-green-500'
+                            : timeInRange / timeElapsed > 0.12
+                                ? 'text-yellow-500' 
+                                : 'text-guardsman-red-600'
+                    }
+                >{Math.round(timeInRange / 100)}ds</span>{" "}/ {Math.round(timeElapsed / 100)}ds)
             </p>
         </div>
     );
