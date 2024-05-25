@@ -12,6 +12,9 @@ import { useStore } from "@nanostores/react";
 import { dataStore } from "@/stores/dataStore";
 import { displayRefreshRateStore } from "@/stores/displayRefreshRateStore";
 import { fetchStatusStore } from "@/stores/fetchStatusStore"; // Import the new store
+import { timeInRangeStore } from "@/stores/timeInRangeStore";
+import { timeElapsedStore } from "@/stores/timeElapsedStore";
+import { internalRefreshRateStore } from "@/stores/internalRefreshRateStore";
 import type { Data } from "@/types/Data";
 
 const PUBLIC_BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000';
@@ -20,7 +23,9 @@ const N_DATA = 500;
 export default function Grafica() {
     const displayRefreshRate = useStore(displayRefreshRateStore);
     const fetchStatus = useStore(fetchStatusStore); // Get fetch status
+    const internalRefreshRate = useStore(internalRefreshRateStore)
     const [data, setData] = useState<Data[]>([]);
+    let intervalId: NodeJS.Timeout;
 
     useEffect(() => {
         console.log(`Base url: ${PUBLIC_BASE_URL}`);
@@ -39,9 +44,9 @@ export default function Grafica() {
                 }
 
                 const body = await resp.json();
-                console.log(body);
+                // console.log(body);
 
-                let new_data: Data[] = [];
+                let new_data: Data[] = dataStore.get();
                 for (let i = 0; i < body.temp_max.length; i++) {
                     new_data.push({
                         temp_min: body.temp_min[i],
@@ -50,14 +55,17 @@ export default function Grafica() {
                         timestamp: body.timestamp[i],
                     } satisfies Data);
                 }
-                dataStore.set([...dataStore.get(), ...new_data]);
-                setData(dataStore.get().slice(-N_DATA));
+                dataStore.set(new_data);
+                setData(new_data.slice(-N_DATA));
+
+                timeInRangeStore.set(new_data.filter((d) => d.temperature >= d.temp_min && d.temperature <= d.temp_max).length * internalRefreshRate);
+                timeElapsedStore.set(new_data.length * internalRefreshRate)
+                // console.log(timeInRangeStore.get());
             } catch (error) {
                 console.warn(`No se pudo recibir los datos del servidor; Elapsed: ${Date.now() - start}ms`);
             }
         };
 
-        let intervalId: NodeJS.Timeout;
 
         if (fetchStatus === 'start') {
             intervalId = setInterval(fetchData, displayRefreshRate);

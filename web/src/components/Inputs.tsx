@@ -5,6 +5,7 @@ import { useToast } from './ui/use-toast';
 import Button from './Button';
 import { useStore } from '@nanostores/react';
 import { displayRefreshRateStore } from '@/stores/displayRefreshRateStore';
+import { internalRefreshRateStore } from '@/stores/internalRefreshRateStore';
 import { roundDurationStore } from '@/stores/roundDurationStore'; // New store
 
 const Inputs = () => {
@@ -73,7 +74,8 @@ const Inputs = () => {
   async function setParams(): Promise<void> {
     if (validateInputs()) {
       displayRefreshRateStore.set(parseInt(refreshRate));
-      roundDurationStore.set(roundDuration.split(';').map(Number)); // Store round duration
+      roundDurationStore.set(roundDuration.split(';').map(Number).reduce((p, a) => p+a, 0))
+      internalRefreshRateStore.set(parseInt(internalRate))
 
       const password = localStorage.getItem('password') ?? '';
 
