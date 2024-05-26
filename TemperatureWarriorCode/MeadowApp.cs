@@ -54,7 +54,7 @@ namespace TemperatureWarriorCode
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
 
-                sensor.StartUpdating(TimeSpan.FromMilliseconds(100));  // The sensor will update every 250ms
+                sensor.StartUpdating(TimeSpan.FromMilliseconds(100));  // The sensor will update every 100ms
 
                 // Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -197,7 +197,7 @@ namespace TemperatureWarriorCode
         // Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
-            // Round the new temperature to 2 decimal places
+            // Round the new temperature to 1 decimal places
             var temp_new = Math.Round((double)e.New.Celsius, 1);
 
             // Add the new temperature to the queue

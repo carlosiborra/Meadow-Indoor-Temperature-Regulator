@@ -198,14 +198,6 @@ namespace TemperatureWarriorCode.Web
                         }
 
                         break;
-                    
-                    case "/round_info" when req.HttpMethod == "GET":
-                        Console.WriteLine("Retrieve round info");
-
-                        resp.StatusCode = 200;
-                        resp.StatusDescription = "OK";
-                        message = $"{{\"timestamp\":{DateTimeOffset.UtcNow.ToUnixTimeSeconds()},\"time_in_range\":\"\"}}";
-                        break;
 
                     default:
                         resp.StatusCode = 404;
