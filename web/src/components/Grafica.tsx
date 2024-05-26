@@ -82,7 +82,7 @@ export default function Grafica() {
         <>
             <LineChart width={1000} height={500} data={data} className="custom-chart bg-white p-4 m-4 rounded-md">
                 <CartesianGrid strokeDasharray="4" />
-                <XAxis dataKey="timestamp" />
+                <XAxis />
                 <YAxis />
                 <Tooltip />
                 <Legend />

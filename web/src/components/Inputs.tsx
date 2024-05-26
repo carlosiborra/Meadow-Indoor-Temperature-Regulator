@@ -103,7 +103,6 @@ const Inputs = () => {
         if (!response.ok) {
           throw new Error('HTTP error ' + response.status);
         }
-        await response.json();
         toast({
           title: 'Ok',
           description: 'Parámetros guardados correctamente',
@@ -121,7 +120,7 @@ const Inputs = () => {
   return (
     <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[650px] items-center">
       <span className="col-start-1">
-        Min Temperature (°C):
+        Temperatura Min (°C):
       </span>
       <input
         type="text"
@@ -132,7 +131,7 @@ const Inputs = () => {
       />
 
       <span className="col-start-1">
-        Max Temperature (°C):
+        Temperatura Max (°C):
       </span>
       <input
         type="text"
@@ -143,7 +142,7 @@ const Inputs = () => {
       />
 
       <span className="col-start-1">
-        Round Duration (s):
+        Duración rondas (s):
       </span>
       <input
         type="text"
@@ -156,7 +155,7 @@ const Inputs = () => {
       <div style={{ margin: '20px 0', background: 'white', height: '2px', gridColumn: "span 2" }}></div>
 
       <span className="col-start-1">
-        Meadow measures rate (ms):
+        Frecuencia medición Meadow (ms):
       </span>
       <input
         type="number"
@@ -167,7 +166,7 @@ const Inputs = () => {
       />
 
       <span className="col-start-1">
-        Graph fetch rate (ms):
+        Frecuencia actualización gráfica (ms):
       </span>
       <input
         type="number"
