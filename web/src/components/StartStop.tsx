@@ -15,39 +15,27 @@ export default function StartStop() {
 
 
     const handleStart = async () => {
-        fetchStatusStore.set("start");
-        dataStore.set([]);
-        roundNumberStore.set(roundNumberStore.get()+1)
-        await startRonda();
-    };
-
-    const handleStop = async () => {
-        fetchStatusStore.set("stop");
-        await fetch(`/api/download`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ data: dataStore.get() }),
-        });
-        await stopRonda();
-    };
-
-    const startRonda = async () => {
         const controller = new AbortController();
         const timeout = Math.round((displayRefreshRate * 2) / 3);
         const id = setTimeout(() => controller.abort(), timeout);
         const start = Date.now();
 
         try {
-            await fetch(`${PUBLIC_BASE_URL}/start`, {
+            const resp = await fetch(`${PUBLIC_BASE_URL}/start`, {
                 signal: controller.signal,
             });
+            if(!resp.ok){
+                throw new Error("HTTP error " + resp.status)
+            }
+
             toast({
                 title: "Ok",
                 description: "Ronda iniciada correctamente",
             });
-            return true;
+
+            fetchStatusStore.set("start");
+            dataStore.set([]);
+            roundNumberStore.set(roundNumberStore.get()+1)
         } catch {
             toast({
                 variant: "destructive",
@@ -60,21 +48,37 @@ export default function StartStop() {
         }
     };
 
-    const stopRonda = async () => {
+    const handleStop = async () => {
         const controller = new AbortController();
         const timeout = Math.round((displayRefreshRate * 2) / 3);
         const id = setTimeout(() => controller.abort(), timeout);
         const start = Date.now();
 
         try {
-            await fetch(`${PUBLIC_BASE_URL}/shutdown`, {
+            let resp = await fetch(`${PUBLIC_BASE_URL}/shutdown`, {
                 method: "POST",
                 signal: controller.signal,
             });
+            if(!resp.ok){
+                throw new Error("HTTP Error " + resp.status)
+            }
+            resp = await fetch(`/api/download`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ data: dataStore.get() }),
+            });
+            if(!resp.ok){
+                throw new Error("HTTP Error " + resp.status)
+            }
+
             toast({
                 title: "Ok",
                 description: "Meadow apagada correctamente",
             });
+
+            fetchStatusStore.set("stop");
         } catch {
             toast({
                 variant: "destructive",

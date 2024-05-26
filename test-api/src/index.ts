@@ -5,6 +5,18 @@ const app = new Hono();
 
 app.use("/*", cors());
 
+app.get("/start", (c) => {
+    return c.text("")
+})
+
+app.post("/shutdown", (c) => {
+    return c.text("")
+})
+
+app.post("/setparams", (c) => {
+    return c.text("")
+})
+
 app.get("/temp", (c) => {
     let temp_min: number[] = [];
     let temp_max: number[] = [];

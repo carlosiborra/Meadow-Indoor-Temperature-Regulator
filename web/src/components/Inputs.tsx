@@ -118,7 +118,7 @@ const Inputs = () => {
   }
 
   return (
-    <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[650px] items-center">
+    <section className="py-4 px-16 grid grid-cols-2 gap-4 w-[750px] items-center">
       <span className="col-start-1">
         Temperatura Min (°C):
       </span>
