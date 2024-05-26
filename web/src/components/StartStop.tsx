@@ -22,9 +22,9 @@ export default function StartStop() {
 
         try {
             const resp = await fetch(`${PUBLIC_BASE_URL}/start`, {
-                signal: controller.signal,
+                // signal: controller.signal,
             });
-            if(!resp.ok){
+            if (!resp.ok) {
                 throw new Error("HTTP error " + resp.status)
             }
 
@@ -35,14 +35,13 @@ export default function StartStop() {
 
             fetchStatusStore.set("start");
             dataStore.set([]);
-            roundNumberStore.set(roundNumberStore.get()+1)
+            roundNumberStore.set(roundNumberStore.get() + 1)
         } catch {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: `No se pudo iniciar la ronda; Elapsed: ${
-                    Date.now() - start
-                }ms`,
+                description: `No se pudo iniciar la ronda; Elapsed: ${Date.now() - start
+                    }ms`,
             });
             return false;
         }
@@ -57,9 +56,9 @@ export default function StartStop() {
         try {
             let resp = await fetch(`${PUBLIC_BASE_URL}/shutdown`, {
                 method: "POST",
-                signal: controller.signal,
+                // signal: controller.signal,
             });
-            if(!resp.ok){
+            if (!resp.ok) {
                 throw new Error("HTTP Error " + resp.status)
             }
             resp = await fetch(`/api/download`, {
@@ -69,7 +68,7 @@ export default function StartStop() {
                 },
                 body: JSON.stringify({ data: dataStore.get() }),
             });
-            if(!resp.ok){
+            if (!resp.ok) {
                 throw new Error("HTTP Error " + resp.status)
             }
 
@@ -83,9 +82,8 @@ export default function StartStop() {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: `No se pudo apagar la Meadow; Timeout: ${timeout}ms, Elapsed: ${
-                    Date.now() - start
-                }ms`,
+                description: `No se pudo apagar la Meadow; Timeout: ${timeout}ms, Elapsed: ${Date.now() - start
+                    }ms`,
             });
         }
     };

@@ -12,8 +12,8 @@ namespace TemperatureWarriorCode
         public static int Port = 3000;
 
         //ROUND VARIABLES
-        public static string[] temp_max = { "34", "32" }; // In ºC
-        public static string[] temp_min = { "32", "30" }; // In ºC
+        public static string[] temp_max = { "30", "22" }; // In ºC
+        public static string[] temp_min = { "28", "20" }; // In ºC
         public static string[] round_time = { "20", "100" }; // in s
         public static int refresh = 100; // In ms
         public static double output;

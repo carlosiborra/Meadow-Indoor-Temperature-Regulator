@@ -15,6 +15,7 @@ import { fetchStatusStore } from "@/stores/fetchStatusStore"; // Import the new 
 import { timeInRangeStore } from "@/stores/timeInRangeStore";
 import { timeElapsedStore } from "@/stores/timeElapsedStore";
 import { internalRefreshRateStore } from "@/stores/internalRefreshRateStore";
+import { roundDurationStore } from "@/stores/roundDurationStore";
 import type { Data } from "@/types/Data";
 
 const PUBLIC_BASE_URL = import.meta.env.PUBLIC_BASE_URL ?? 'http://localhost:3000';
@@ -28,8 +29,6 @@ export default function Grafica() {
     let intervalId: NodeJS.Timeout;
 
     useEffect(() => {
-        console.log(`Base url: ${PUBLIC_BASE_URL}`);
-
         const fetchData = async () => {
             const start = Date.now();
             try {
@@ -44,7 +43,6 @@ export default function Grafica() {
                 }
 
                 const body = await resp.json();
-                // console.log(body);
 
                 let new_data: Data[] = dataStore.get();
                 for (let i = 0; i < body.temp_max.length; i++) {
@@ -60,7 +58,10 @@ export default function Grafica() {
 
                 timeInRangeStore.set(new_data.filter((d) => d.temperature >= d.temp_min && d.temperature <= d.temp_max).length * internalRefreshRate);
                 timeElapsedStore.set(new_data.length * internalRefreshRate)
-                // console.log(timeInRangeStore.get());
+
+                if (timeElapsedStore.get() >= roundDurationStore.get() * 1000) {
+                    fetchStatusStore.set('stop')
+                }
             } catch (error) {
                 console.warn(`No se pudo recibir los datos del servidor; Elapsed: ${Date.now() - start}ms`);
             }
@@ -71,8 +72,6 @@ export default function Grafica() {
             intervalId = setInterval(fetchData, displayRefreshRate);
         } else if (fetchStatus === 'stop') {
             clearInterval(intervalId);
-            // Cleat the graph
-            dataStore.set([]);
         }
 
         return () => clearInterval(intervalId);

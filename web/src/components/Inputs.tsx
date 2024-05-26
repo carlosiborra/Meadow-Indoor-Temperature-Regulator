@@ -74,7 +74,7 @@ const Inputs = () => {
   async function setParams(): Promise<void> {
     if (validateInputs()) {
       displayRefreshRateStore.set(parseInt(refreshRate));
-      roundDurationStore.set(roundDuration.split(';').map(Number).reduce((p, a) => p+a, 0))
+      roundDurationStore.set(roundDuration.split(';').map(Number).reduce((p, a) => p + a, 0))
       internalRefreshRateStore.set(parseInt(internalRate))
 
       const password = localStorage.getItem('password') ?? '';
@@ -98,7 +98,7 @@ const Inputs = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(params),
-          signal: controller.signal,
+          // signal: controller.signal,
         });
         if (!response.ok) {
           throw new Error('HTTP error ' + response.status);
