@@ -1,0 +1,30 @@
+<nav class="py-4 px-16 flex flex-row justify-between items-center">
+    <h1 class="text-xl text-fountain-blue-600">
+        Temperature Warrior
+    </h1>
+    <label class="input flex items-center gap-2 rounded-2xl py-0 px-3 bg-light-primary text-dark-primary">
+        <span class="py-0">
+            Contraseña:
+        </span>
+        <input 
+            name="password" 
+            id="password" 
+            type="password" 
+            class="grow" 
+            placeholder="password"
+        />
+      </label>
+</nav>
+
+<script is:inline>
+    let password = localStorage.getItem('password') ?? '';
+
+    const passwordInput = document.getElementById('password');
+
+    passwordInput.value = password;
+
+    passwordInput.addEventListener('change', (event) => {
+        password = event.target.value;
+        localStorage.setItem('password', password);
+    });
+</script>

@@ -1,4 +1,4 @@
-﻿using Meadow;
+using Meadow;
 using Meadow.Foundation;
 using Meadow.Foundation.Sensors.Temperature;
 using Meadow.Devices;
@@ -15,163 +15,257 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using TemperatureWarriorCode.Web;
 using NETDuinoWar;
+using Meadow.Foundation.Relays;
+using System.Text.RegularExpressions;
+using System.Net;
+using System.Collections.Generic;
 
-
-namespace TemperatureWarriorCode {
-    public class MeadowApp : App<F7FeatherV2> {
-
-        //Temperature Sensor
+namespace TemperatureWarriorCode
+{
+    public class MeadowApp : App<F7FeatherV2>
+    {
+        // Temperature Sensor
         AnalogTemperature sensor;
-
-        //Time Controller Values
+        // Time Controller Values
         public static int total_time = 0;
-        public static int total_time_in_range = 0;
-        public static int total_time_out_of_range = 0;
+
+        public WebServer webServer;
+        public static TimeController timeController;
+
+        // Relays
+        public static Relay relayBombilla;
+        public static Relay relayPlaca;
 
         public int count = 0;
+        public bool start = true;
+        public int contiguous_outliers = 0;
 
-        public override async Task Run() {
-            if (count == 0) {
+        // Moving average filter parameters
+        private Queue<double> temperatureReadings = new Queue<double>();
+        private const int MaxReadings = 10; // Number of readings to average
+
+        public override async Task Run()
+        {
+            if (count == 0)
+            {
                 Console.WriteLine("Initialization...");
 
-                // TODO uncomment when needed 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated; // Subscribing to event (temp change)
-                sensor.StartUpdating(TimeSpan.FromSeconds(2)); // 2 secs are very important!!!!
 
-                // TODO Local Network configuration (uncomment when needed)
+                sensor.StartUpdating(TimeSpan.FromMilliseconds(100));  // The sensor will update every 100ms
+
+                // Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
                 wifi.NetworkConnected += WiFiAdapter_ConnectionCompleted;
 
-                //WiFi Channel
                 WifiNetwork wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
-
+                while (wifiNetwork == null)
+                {
+                    // WiFi Channel
+                    wifiNetwork = ScanForAccessPoints(Secrets.WIFI_NAME);
+                    Console.WriteLine("No networks found");
+                }
+                Console.WriteLine($"Wifi Networks: {wifiNetwork}");
                 wifi.NetworkConnected += WiFiAdapter_WiFiConnected;
                 await wifi.Connect(Secrets.WIFI_NAME, Secrets.WIFI_PASSWORD);
 
-                string IPAddress = wifi.IpAddress.ToString();
+                string ipAddressString = wifi.IpAddress.ToString();
 
-                //Connnect to the WiFi network.
-                Console.WriteLine($"IP Address test: {IPAddress}");
-                Data.IP = IPAddress;
-                if (!string.IsNullOrWhiteSpace(IPAddress))
+                // Display the IP address
+                Console.WriteLine($"IP Address: {ipAddressString}:{Data.Port}");
+                Data.IP = ipAddressString;
+
+                if (!string.IsNullOrWhiteSpace(ipAddressString))
                 {
-                    Data.IP = IPAddress;
-                    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
+                    Data.IP = ipAddressString;
+
+                    // Convert the string IP address to a System.Net.IPAddress object
+                    IPAddress ipAddress = IPAddress.Parse(ipAddressString);
+
+                    // Pass the IPAddress object to the WebServer constructor
+                    webServer = new WebServer(ipAddress, Data.Port);
                     if (webServer != null)
                     {
                         webServer.Start();
                     }
                 }
 
-                Console.WriteLine("Meadow Initialized!");
+                Console.WriteLine("Meadow Initialized - MODO CONFIGURACIÓN");
 
-                count = count + 1;
+                count++;
             }
         }
 
-        //TW Combat Round
-        public static void StartRound() {
-
+        // TW Combat Round
+        public static async Task StartRoundAsync()
+        {
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
-            //Value to control the time for heating and cooling
-            //First iteration is 100 for the time spend creating timecontroller and thread
-            int sleep_time = 20;
+            // Initialize the round controller
+            var roundController = new RoundController();
+            timeController = new TimeController();
 
-            //Initialization of time controller
-            TimeController timeController = new TimeController();
+            // Initialize relays
+            relayBombilla = InstantiateRelay(Device.Pins.D05, initialValue: true);
+            relayPlaca = InstantiateRelay(Device.Pins.D06, initialValue: true);
 
-            //Configuration of differents ranges
-            TemperatureRange[] temperatureRanges = new TemperatureRange[Data.round_time.Length];
+            // Configure temperature ranges for the round
+            TemperatureRange[] temperatureRanges = new TemperatureRange[Data.temp_min.Length];
+            total_time = 0;
 
-            //Range configurations
+            Data.is_working = true;
+            for (int i = 0; i < Data.temp_min.Length; i++)
+            {
+                double tempMin = double.Parse(Data.temp_min[i]);
+                double tempMax = double.Parse(Data.temp_max[i]);
+                int roundTime = int.Parse(Data.round_time[i]) * 1000; // Convert seconds to milliseconds
+
+                Console.WriteLine($"Configuring range {i}: Temp_min={tempMin}ºC, Temp_max={tempMax}ºC, Round_time={roundTime / 1000}s");
+
+                // Check that the temperatures obtained are within the range of maximum and minimum temperatures
+                tempMax = roundController.CheckTemperature(tempMax);
+                tempMin = roundController.CheckTemperature(tempMin);
+
+                // Ensure the duration is greater than 0
+                if (roundTime <= 0)
+                {
+                    throw new ArgumentException("Duration should be greater than zero.");
+                }
+                temperatureRanges[i] = new TemperatureRange(tempMin, tempMax, roundTime);
+
+                total_time += roundTime;
+            }
+
             bool success;
             string error_message = null;
-            Data.is_working = true;
-
-            //define ranges
-            for (int i = 0; i < Data.temp_min.Length; i++) {
-                Console.WriteLine(Data.temp_max[i]);
-                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
-                total_time += int.Parse(Data.round_time[i]);
-            }
-            
-            //Initialization of timecontroller with the ranges
-            timeController.DEBUG_MODE = false;
-            success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
+            // Initialization of timecontroller with the ranges
+            timeController.DEBUG_MODE = true;
+            success = timeController.Configure(temperatureRanges, total_time, Data.refresh, out error_message);
             Console.WriteLine(success);
 
-            //Initialization of timer
-            Thread t = new Thread(Timer);
-            t.Start();
+            // Configure the round controller
+            if (roundController.Configure(temperatureRanges, total_time, Data.refresh, relayBombilla, relayPlaca, out string errorMessage) && success)
+            {
+                Console.WriteLine("Round controller successfully configured.");
 
-            Stopwatch regTempTimer = new Stopwatch();
-            timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
-            regTempTimer.Start();
+                // Initialization of timer
+                _ = Task.Run(() => TimerAsync());  // Run the timer asynchronously
 
-            Console.WriteLine("STARTING");
-
-            //THE TW START WORKING
-            while (Data.is_working) {
-
-                //This is the time refresh we did not do before
-                Thread.Sleep(Data.refresh - sleep_time);
-
-                //Temperature registration
-                Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
-                regTempTimer.Restart();
-
+                // Start the round operation (PID controller for each temperature range)
+                await Task.Run(() => timeController.StartOperation());
+                await Task.Run(() => roundController.StartOperation(timeController, total_time));
             }
-            Console.WriteLine("Round Finish");
-            t.Abort();
-
-            total_time_in_range += timeController.TimeInRangeInMilliseconds;
-            total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
-            Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
-
-            Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-            Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+            else
+            {
+                Console.WriteLine($"Error configuring round controller: {errorMessage}");
+            }
         }
 
-        //Round Timer
-        private static void Timer() {
+        // Round Timer
+        private static async Task TimerAsync()
+        {
             Data.is_working = true;
-            for (int i = 0; i < Data.round_time.Length; i++) {
+            Console.WriteLine($"Timer started");
+            for (int i = 0; Data.round_time != null && i < Data.round_time.Length; i++)
+            {
                 Data.time_left = int.Parse(Data.round_time[i]);
-
-                while (Data.time_left > 0) {
+                Console.WriteLine($"{Data.time_left} seconds left");
+                while (Data.time_left > 0)
+                {
                     Data.time_left--;
-                    Thread.Sleep(1000);
+                    Console.WriteLine($"{Data.time_left} seconds left");
+                    await Task.Delay(1000);
                 }
+                Data.next_range = true;
             }
             Data.is_working = false;
+            Console.WriteLine("Timer finished");
         }
 
-        //Temperature and Display Updated
-        void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e) {
+        #region Relay
+        private static Relay InstantiateRelay(IPin thePin, bool initialValue)
+        {
+            Relay theRelay = new Relay(Device.CreateDigitalOutputPort(thePin));
+            theRelay.IsOn = initialValue;
+            return theRelay;
+        }
+        #endregion
 
-            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
+        // Temperature and Display Updated
+        void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
+        {
+            // Round the new temperature to 1 decimal places
+            var temp_new = Math.Round((double)e.New.Celsius, 1);
 
-            Console.WriteLine($"Temperature={Data.temp_act}");
+            // Add the new temperature to the queue
+            temperatureReadings.Enqueue(temp_new);
+            if (temperatureReadings.Count > MaxReadings)
+            {
+                temperatureReadings.Dequeue();
+            }
+
+            // Printe queue
+            //Console.WriteLine($"Temperature readings: {string.Join(", ", temperatureReadings)}");
+
+            // Calculate the average temperature
+            var avg_temp = Math.Round(temperatureReadings.Average(), 1);
+
+            // Only check for outliers if start is false (not the first reading)
+            if (!start)
+            {
+                // Parse previous temperature
+                var prev_temp = Convert.ToDouble(Data.temp_act);
+
+                // Shut down when extreme temperatures or sensor disconnection are detected
+                if (avg_temp > RoundController.max_allowed_temp || avg_temp < RoundController.min_allowed_temp)  //  || avg_temp < RoundController.min_allowed_temp
+                {
+                    Console.WriteLine("Shutdown requested");
+                    webServer.Stop();
+                }
+
+                // Check if the new temperature is an outlier
+                if (avg_temp < prev_temp - 5.00 || avg_temp > prev_temp + 5.00)
+                {
+                    // Increment the count of contiguous outliers
+                    if (++contiguous_outliers < 3)
+                    {
+                        Console.WriteLine($"Current temperature (outlier): {avg_temp}");
+                        return;
+                    }
+                }
+                else
+                {
+                    // Reset the count of contiguous outliers if the temperature is within range
+                    contiguous_outliers = 0;
+                }
+            }
+
+            // Update and print the new temperature
+            Data.temp_act = avg_temp.ToString();
+            start = false;
+            Console.WriteLine($"Current temperature: {Data.temp_act}");
         }
 
-        void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
-            if (sender != null) {
+        void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
+        {
+            if (sender != null)
+            {
                 Console.WriteLine($"Connecting to WiFi Network {Secrets.WIFI_NAME}");
             }
         }
 
-        void WiFiAdapter_ConnectionCompleted(object sender, EventArgs e) {
+        void WiFiAdapter_ConnectionCompleted(object sender, EventArgs e)
+        {
             Console.WriteLine("Connection request completed.");
         }
 
-        protected WifiNetwork ScanForAccessPoints(string SSID) {
+        protected WifiNetwork ScanForAccessPoints(string SSID)
+        {
             WifiNetwork wifiNetwork = null;
-            ObservableCollection<WifiNetwork> networks = new ObservableCollection<WifiNetwork>(Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>().Scan()?.Result?.ToList()); //REVISAR SI ESTO ESTA BIEN
+            ObservableCollection<WifiNetwork> networks = new ObservableCollection<WifiNetwork>(Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>().Scan()?.Result?.ToList());
             wifiNetwork = networks?.FirstOrDefault(x => string.Compare(x.Ssid, SSID, true) == 0);
             return wifiNetwork;
         }
